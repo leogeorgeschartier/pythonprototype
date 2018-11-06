@@ -69,7 +69,7 @@ class Tree:
                     if identifier in self.nodes[a].__children:
                         d += 1
                         z += [ a]
-                if d = 1 :
+                if d == 1 :
                     return z[0]
                 else :
                     print("the tree is not well_formed")
@@ -85,7 +85,7 @@ class Tree:
         for  a in self.nodes()[key]:
             if self.is_root(a):
                 d += 1
-        if d = 1 :
+        if d == 1 :
             return True
         else :
             return False
@@ -146,7 +146,7 @@ class Assoc_Table :
         self.__eqtable += [eqclass]
 
     def add_element_to_class(self , identifiant , eqclass ):
-        self.eqtable() = self.eqtable().remove(eqclass)
+        self.__eqtable = self.__eqtable.remove(eqclass)
         eqclass += [identifiant]
         return self.add_class(eqclass)
 
@@ -180,7 +180,7 @@ class Assoc_Table :
         d =[]
         for a in list :
             d += self.get_element_class(a)
-         return d
+        return d
 
 
 def compare_list_to_list(l1 , l2 , AssocTable):
@@ -195,14 +195,14 @@ def compare_list_to_list(l1 , l2 , AssocTable):
     return [b ,c]
 
 def recursive_adding_node(    tree , h , a ):
-    if h = 0 :
+    if h == 0 :
         return tree
     else :
         return recursive_adding_node(tree.add_node(a , "i") , h-1 , "i")
 
 def add_none_existing_node_to_tree(A1 , A2):
     h = max( A1.hauteur() , A2.hauteur())
-    if h = A1.hauteur():
+    if h == A1.hauteur():
         a = A2.list_leaf()[0]
         return  A1 , recursive_adding_node(A2 , h , a )
     else :
@@ -226,25 +226,25 @@ def allowed_word(identifiant):
         return True
 
 
-def parse_block(file , tree):
-    if is_empty(file):
-        return  memory
-    else:
-        a = get_word(file)
-        if allowed_word(file , a ):
-            
+# def parse_block(file , tree):
+    # if is_empty(file):
+        # return  memory
+    # else:
+        # a = get_word(file)
+        # if allowed_word(file , a ):
+		
 
 
 
 
-def parser(file) :
-    a = get_word(file)
-    if a == "block":
-        parse_block(file)
-    elif a == "port":
-        parse_port(file)
-    else a == "end":
-        parse_ending(file)
+# def parser(file) :
+    # a = get_word(file)
+    # if a == "block":
+        # parse_block(file)
+    # elif a == "port":
+        # parse_port(file)
+    # else a == "end":
+        # parse_ending(file)
 
 #
 # Main part
