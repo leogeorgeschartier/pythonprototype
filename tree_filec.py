@@ -245,3 +245,11 @@ def parser(file) :
         parse_port(file)
     else a == "end":
         parse_ending(file)
+
+#
+# Main part
+#
+n1 = Node("n1")
+
+
+
