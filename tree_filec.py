@@ -310,27 +310,20 @@ def allowed_word(identifiant):
     else:
         return True
 
-
-
-
-
-# def parse_block(file , tree):
-# if is_empty(file):
-# return  memory
-# else:
-# a = get_word(file)
-# if allowed_word(file , a ):
-
-
-# def parser(file) :
-# a = get_word(file)
-# if a == "block":
-# parse_block(file)
-# elif a == "port":
-# parse_port(file)
-# else a == "end":
-# parse_ending(file)
-
-#
-# Main part
-#
+def parse_block(file , tree , current_node):
+    x = get_word(file)
+    if allowed_word( x ):
+        if current_node == None:
+            tree.add_node(x)
+            current_node = x
+        else:
+            tree.add_node(x , current_node)
+            current_node = x
+        b = get_word(file)
+        if allowed_word(b):
+            print ( " the model is not well formed")
+        else :
+            if b == "block":
+                parse_block(file , tree , current_node)
+            elif b == "port":
+                parse_port(file ,tree , current_node)
