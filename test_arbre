@@ -1,0 +1,21 @@
+from tree import *
+import unittest,collections
+
+class Tree_Tests(unittest.TestCase):
+    def test_is_tree_1  (self):
+        a  =  12
+        self.assertFalse(  is_tree(a))
+
+    def test_tree_new_1 (self):
+        t  = Tree()
+        self.assertTrue(is_tree(t))
+        self.assertTrue( t.is_empty())
+        self.assertEqual( t.list_leaf(),[])
+
+    def test_add_node(self):
+        d  =  Tree()
+        d.add_node("e")
+        self.assertTrue(is_tree(d))
+        self.assertTrue(d.is_a_leaf("e"))
+        self.assertEqual(tree.get_key()  ,  "e")
+        self.assertEqual( tree.list_leaf() ,  ["e"])
