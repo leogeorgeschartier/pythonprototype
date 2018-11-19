@@ -1,7 +1,15 @@
 class Node:
-    def __init__(self, identifier):
+    BLOCK=1
+    PORT=2
+    IDENTIFIER=3
+    CLASS=4
+
+
+    def __init__(self, identifier ,type):
         self.__identifier = identifier
         self.__children = []
+        self.__type = type
+
 
     def identifier(self):
         return self.__identifier
@@ -12,38 +20,131 @@ class Node:
     def add_child(self, identifier):
         self.__children.append(identifier)
 
-n = Node("e")
+n = Node("e",Node.BLOCK)
 n.identifier()
 n.add_child("r")
 n.children()
 
 class Tree:
     def __init__(self):
-        self.__nodes = {}
+        self.__nodes = []
+
+    def __init__(self,listnodes):
+        assert isinstance(listnodes, list)
+        self.__nodes = listnodes
 
     def nodes(self):
         return self.__nodes
 
-    def add_node(self, identifier, parent=None):
-        node = Node(identifier)
-        self.__nodes[identifier] = node
-
-        if parent is not None:
-            self.__nodes[parent].add_child(identifier)
-
-        return None
-
     def is_empty(self):
-        if self.nodes() == {}:
+        if self.nodes() == []:
             return True
         else:
             return False
 
-    def is_a_leaf(self, identifier):
-        if self.__nodes[identifier].children() == []:
+    def addroot(self , node):
+        if self.is_empty():
+            self.__nodes += [node]
+
+
+    def root(self):
+        if self.__nodes == []:
+            print("the tree is empty")
+        else :
+            return self.nodes()[0]
+
+
+    def belongstotree(self, x):
+        def belongsto(arbre , x):
+            if arbre == []:
+                return False
+            else:
+                if arbre[0] == x:
+                    return True
+                else:
+                    if not belongsto(arbre[1], x):
+                        if len(arbre) < 3:
+                            return False
+                        else:
+                            return belongsto([arbre[0]] + arbre[2:], x)
+                    else:
+                        return True
+        t = self.nodes()
+        return belongsto(t , x )
+
+
+
+
+
+
+    def subtreey(self, a):
+        def subtree(arbre , a):
+            if arbre == []:
+                return None
+            else:
+                if arbre[0] == a:
+                    return arbre
+                else:
+                    if subtree(arbre[1], a) == None:
+                        if len(arbre) < 3:
+                            return None
+                        else:
+                            return subtree([arbre[0]] + arbre[2:], a)
+                    else:
+                        return subtree(arbre[1], a)
+        t = Tree(subtree(self.nodes() , a))
+        t.__nodes += subtree(self.nodes() , a)
+        return t
+
+    def addnod(self , x , y):
+        def belongsto(arbre , x):
+            if arbre == []:
+                return False
+            else:
+                if arbre[0] == x:
+                    return True
+                else:
+                    if not belongsto(arbre[1], x):
+                        if len(arbre) < 3:
+                            return False
+                        else:
+                            return belongsto([arbre[0]] + arbre[2:], x)
+                    else:
+                        return True
+        def addnode(tree, a, b):
+            if tree == []:
+                return tree
+            else:
+                if not belongsto(tree, b):
+                    return tree
+                else:
+                    if tree[0] == b:
+                        if [] in tree:
+                            tree.remove([])
+                            return tree + [[a, []]]
+                        else:
+                            return tree + [[a, []]]
+                    else:
+                        if belongsto(tree[1], b):
+                            if len(tree) >= 3:
+                                return [tree[0]] + [addnode(tree[1], a, b)] + tree[2:]
+                            else:
+                                return [tree[0]] + [addnode(tree[1], a, b)]
+                        else:
+                            if len(tree) < 3:
+                                return tree
+                            else:
+                                return addnode([tree[0]] + tree[2:], a, b) + [tree[1]]
+        self.__nodes += [addnode(self.nodes() , x , y )]
+        return self
+
+    def is_a_leaf(self, node):
+        d = self.subtreey(node)
+        if d[1] == []:
             return True
         else:
             return False
+
 
     def list_leaf(self):
         d = []
@@ -52,32 +153,36 @@ class Tree:
                 d += [a]
         return d
 
-    def is_root(self, identifier):
-        d = True
-        for a in self.__nodes.keys():
-            if not identifier in self.__nodes[a].children():
-                d = True and d
+    def ancestor(self, y):
+        def ancestorv(tree, a, x):
+            if tree == []:
+                return None
             else:
-                d = False and d
-        return d
-
-    def ancestor(self, identifier):
-        d = 0
-        z = []
-        if self.is_root(identifier):
-            print("no ancestor for root_node")
-        else:
-            if identifier not in self.__nodes.keys():
-                print("no such node in tree")
-            else:
-                for a in self.__nodes.keys():
-                    if identifier in self.nodes()[a].children():
-                        d += 1
-                        z += [a]
-                if d == 1:
-                    return z[0]
+                if tree[0] == a:
+                    return x
                 else:
-                    print("the tree is not well_formed")
+                    def localfunction(l, a):
+                        if len(l) <= 1:
+                            return None
+                        else:
+                            if ancestorv(l[1], a, l[0]) == None:
+                                if len(l) < 3:
+                                    return None
+                                else:
+                                    return ancestorv([l[0]] + l[2:], a, l[0])
+                            else:
+                                return ancestorv(l[1], a, l[0])
+                    return localfunction(tree, a)
+        return ancestorv(self.nodes() , y , self.nodes()[0])
+
+    def is_root(tree, node):
+        if tree.ancestor(node) == None:
+            return False
+        else:
+            if tree.ancestor(node) == node:
+                return True
+            else:
+                return False
 
     def one_way_to_root(self, identifiant):
         if self.is_root(identifiant):
@@ -104,12 +209,6 @@ class Tree:
                 d = False and d
         return d
 
-    def belongs_to_tree(self, identifier):
-        if identifier not in self.nodes().keys():
-            print("no such node in tree")
-            return False
-        else:
-            return True
 
     def branch_level(self, identifiant):
         if self.well_formed():
@@ -138,192 +237,21 @@ class Tree:
             d = max(d, self.branch_level(a))
         return d
 
-t1 = Tree()
-t1.add_node("e")
-t1.is_empty()
-t1.nodes()
-t1.is_a_leaf("e")
-t1.list_leaf()
-t1.is_root("e")
-t1.add_node("r")
-t1.one_and_only_root()
-t1.ancestor("r")
-
-t2 = Tree()
-t2.add_node("t")
-t2.add_node("r" , "t")
-t2.ancestor("r")
-t2.ancestor("e")
-t2.ancestor("t")
-t2.profondeur()
-t2.branch_level("r")
-t2.list_of_node_at_level_n(1)
-t2.list_of_node_at_level_n(2)
-t2.hauteur()
 
 
+t = Tree([])
+print(t.is_empty())
 
 
+n = Node("e" ,Node.BLOCK)
+v = Node("r" , Node.BLOCK)
+y = Node("o" , Node.BLOCK)
+m = Node("h" , Node.BLOCK)
 
-
-class Assoc_Table:
-    def __init__(self):
-        self.__eqtable = []
-
-    def eqtable(self):
-        return self.__eqtable
-
-    def add_class(self, eqclass):
-        self.__eqtable += [eqclass]
-
-    def add_element_to_class(self, identifiant, eqclass):
-        self.__eqtable.remove(eqclass)
-        eqclass += [identifiant]
-        return self.add_class(eqclass)
-
-    def well_formed_eqtable(self):
-        for a in self.eqtable():
-            for b in a:
-                 self.eqtable().remove(a)
-                 for c in self.eqtable() :
-                    if b in c:
-                        return False
-                 self.add_class(a)
-        return True
-
-    def get_element_class(self, element):
-        d = 0
-        if self.well_formed_eqtable():
-            for a in self.eqtable():
-                if element in a:
-                    d += 1
-                    return a
-            if not d == 1:
-                return [element]
-
-
-    def add_element_to_element_class(self, element1, element2):
-        c = self.get_element_class(element2)
-        return self.add_element_to_class(element1, c)
-
-    def element_eq_to_element(self, element1, element2):
-        if element2 in self.get_element_class(element1):
-            return True
-        else:
-            return False
-
-    def list_of_equivalence_class(self, list):
-        t = []
-        for a in list:
-            t += self.get_element_class(a)
-        return t
-
-
-a = Assoc_Table()
-a.eqtable()
-a.add_class( ["a"])
-a.add_element_to_class("e" , ["a"] )
-
-print(a.eqtable())
-
-a.well_formed_eqtable()
-print(a.get_element_class("e"))
-a.add_element_to_element_class("c" , "e")
-print(a.element_eq_to_element("a" , "c"))
-print(a.list_of_equivalence_class(["u"]))
-
-def compare_list_to_list(l1, l2, AssocTable):
-    d = []
-    c = []
-    for a in l1:
-        if not a in AssocTable.list_of_equivalence_class(l2):
-            d += [a]
-    for b in l2:
-        if not b in AssocTable.list_of_equivalence_class(l1):
-            c += [b]
-    return [d, c]
-
-t = Assoc_Table()
-t.add_class([1,4])
-
-print(compare_list_to_list([1,2,3,5] , [1,4,5,7] , t ))
-
-
-def recursive_adding_node(tree, h, a):
-    c = 0
-    if h == 0:
-        return tree
-    else:
-        tree.add_node(c, a)
-        return recursive_adding_node(tree, h - 1, c )
-
-t3 = Tree()
-t3.add_node("a" )
-print(recursive_adding_node(t3 , 4 , "a").nodes())
-
-def add_none_existing_node_to_tree(A1, A2):
-    h = max(A1.hauteur(), A2.hauteur())
-    if h == A1.hauteur():
-        a = A2.list_leaf()[0]
-        return A1, recursive_adding_node(A2, h, a)
-    else:
-        a = A1.list_leaf()[0]
-        return recursive_adding_node(A1, h, a), A2
-
-
-def compare_tree_to_tree(A1, A2, AssocTable):
-    d = []
-    h = max(A1.hauteur(), A2.hauteur())
-    for i in range(h+1):
-        d += [compare_list_to_list(A1.list_of_node_at_level_n(i), A2.list_of_node_at_level_n(i) , AssocTable)]
-    return d
-
-t4 = Tree()
-t4.add_node("a")
-
-t5 = Tree()
-t5.add_node("e")
-t5.add_node("r" , "e")
-
-u = Assoc_Table()
-
-print(compare_tree_to_tree(t4 , t5 , u  ))
-
-
-t6 = Tree()
-t6.add_node("a")
-t6.add_node("r" , "a" )
-t6.add_node( "t" , "a")
-
-t7 = Tree()
-t7.add_node("y")
-
-v = Assoc_Table()
-v.add_class(["a"  ,"y" ])
-
-print(compare_tree_to_tree(t6 , t7 , v ))
-
-
-def allowed_word(identifiant):
-    if identifant == "block" or identifiant == "end" or identifiant == "port":
-        return False
-    else:
-        return True
-
-def parse_block(file , tree , current_node):
-    x = get_word(file)
-    if allowed_word( x ):
-        if current_node == None:
-            tree.add_node(x)
-            current_node = x
-        else:
-            tree.add_node(x , current_node)
-            current_node = x
-        b = get_word(file)
-        if allowed_word(b):
-            print ( " the model is not well formed")
-        else :
-            if b == "block":
-                parse_block(file , tree , current_node)
-            elif b == "port":
-                parse_port(file ,tree , current_node)
+t.addroot(n)
+t.addnod(v ,n)
+print(t.ancestor(v).identifier())
+print(t.root().identifier())
+print(t.belongstotree(y))
+print(t.is_root(n))
+print()
