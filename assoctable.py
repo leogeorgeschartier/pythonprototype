@@ -1,4 +1,4 @@
-class assoctable:
+class Assoctable:
     def __init__(self):
         self.__classes = []
 
@@ -14,27 +14,29 @@ class assoctable:
             self.__classes += [classe + [a]]
 
     def getclas(self , a ):
-        if self.classes() == []:
-            print( " not in the list ")
-        else:
-            if a in self.classes()[0]:
-                return self.classes()[0]
+        def getc(l ,a ):
+            if l == []:
+                return [a]
             else:
-                self.__classes = self.__classes[1:]
-                return self.getclas(a)
+                if a in l[0]:
+                    return l[0]
+                else:
+                    return getc(l[1:] , a )
+        i = self.classes()
+        return getc(i , a)
 
     def assoclist(self , lis):
         if lis == []:
             return []
         else:
-            return self.getclas(lis[0]) + self.assoclist(lis[1:])
+            return self.getclas(lis[0]) +  self.assoclist(lis[1:])
 
     def getassociate(self , a , l2):
         l = self.getclas(a)
         if l2 ==[]:
             return None
         else :
-            if  l == self.getclas(l[0]):
-                return l[0]
+            if  l == self.getclas(l2[0]):
+                return l2[0]
             else:
                 return self.getassociate( a  , l2[1:])
