@@ -1,5 +1,6 @@
 from arbreetnoueuds import Tree, Node
 import random
+from assoctable import Assoctable
 
 
 class Generateur_arbre():
@@ -49,6 +50,19 @@ class Generateur_arbre():
         return randtree(l , t)
 
 
+class Generateur2arbresandassoctable():
+    def __init__(self ):
+        self.__tree1 = Generateur_arbre().randtree()
+        self.__tree2 = Generateur_arbre().randtree()
+
+    def coupletree(self):
+        return (self.__tree1 , self.__tree2)
+
+    def couplelistenode(self):
+        return (self.coupletree()[0].listnodess() , self.coupletree()[1].listenodes())
+
+    def
+
 u = Generateur_arbre(5)
 u.randtree()
 
@@ -60,3 +74,4 @@ def fiftyshadesoftress(x):
     for i in range(x):
         l += [Generateur_arbre( i )]
         return l
+
