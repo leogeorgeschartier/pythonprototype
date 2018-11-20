@@ -1,0 +1,62 @@
+from arbreetnoueuds import Tree, Node
+import random
+
+
+class Generateur_arbre():
+    def __init__(self , identifiant):
+        self.__randomint = random.randint(1 , 100)
+        self.identifiant = identifiant
+
+
+    def randint(self):
+        return self.__randomint
+
+    def randlistnodes(self):
+        l = []
+        x = self.__randomint
+        for i in range(x):
+            l += [Node( i , Node.BLOCK)]
+        return  l
+
+
+    def randtree(self):
+        l = self.randlistnodes()
+        i = len(l)
+        entier = random.randint(0 , i -1 )
+        rootnode = l[entier]
+        t = Tree([])
+        t.addroot(rootnode)
+        l.remove( l[entier])
+        def randchoiceofparents(h):
+            p = len(h)
+            o = random.randint(0, p-1)
+            n = h[0]
+            return n
+        def randchoiceofnodes( k ):
+            x1 = len(k)
+            x2 = random.randint(0, x1 - 1)
+            x3 = k[x2]
+            k.remove(x3)
+            return x3
+        def randtree( y , tree):
+            if y == []:
+                return tree
+            else:
+                n = randchoiceofnodes( y )
+                i = randchoiceofparents( tree.listnodess() )
+                tree.addnod(n , i )
+                return randtree(y , tree)
+        return randtree(l , t)
+
+
+u = Generateur_arbre(5)
+u.randtree()
+
+print(u.randtree())
+print(u.randtree().listnodess())
+
+def fiftyshadesoftress(x):
+    l= []
+    for i in range(x):
+        l += [Generateur_arbre( i )]
+        return l
