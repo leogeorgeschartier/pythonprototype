@@ -36,6 +36,21 @@ class Tree:
     def nodes(self):
         return self.__nodes
 
+
+    def listnodess(self):
+        def iterate( l , f ):
+            if l == []:
+                return l
+            else :
+                return f(l[0]) + iterate(l[1:] , f )
+        def loxa( l ):
+            if l == []:
+                return l
+            else :
+                return [l[0]] + iterate(l[1:] , loxa)
+        return loxa(self.nodes())
+
+
     def is_empty(self):
         if self.nodes() == []:
             return True
@@ -44,7 +59,7 @@ class Tree:
 
     def addroot(self , node):
         if self.is_empty():
-            self.__nodes += [node]
+            self.__nodes += [node , []]
 
 
     def root(self):
@@ -93,7 +108,6 @@ class Tree:
                     else:
                         return subtree(arbre[1], a)
         t = Tree(subtree(self.nodes() , a))
-        t.__nodes += subtree(self.nodes() , a)
         return t
 
     def addnod(self , x , y):
@@ -135,7 +149,7 @@ class Tree:
                                 return tree
                             else:
                                 return addnode([tree[0]] + tree[2:], a, b) + [tree[1]]
-        self.__nodes += [addnode(self.nodes() , x , y )]
+        self.__nodes = addnode(self.nodes() , x , y )
         return self
 
     def is_a_leaf(self, node):
@@ -249,9 +263,14 @@ y = Node("o" , Node.BLOCK)
 m = Node("h" , Node.BLOCK)
 
 t.addroot(n)
+print(t.nodes())
 t.addnod(v ,n)
+print(t.nodes())
+t.addnod(m , v)
+print(t.nodes())
 print(t.ancestor(v).identifier())
 print(t.root().identifier())
 print(t.belongstotree(y))
 print(t.is_root(n))
-print()
+print(t.subtreey(v))
+print(t.subtreey(v).listnodess())
