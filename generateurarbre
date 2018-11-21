@@ -51,9 +51,9 @@ class Generateur_arbre():
 
 
 class Generateur2arbresandassoctable():
-    def __init__(self ):
-        self.__tree1 = Generateur_arbre().randtree()
-        self.__tree2 = Generateur_arbre().randtree()
+    def __init__(self , id1 , id2 ):
+        self.__tree1 = Generateur_arbre(id1).randtree()
+        self.__tree2 = Generateur_arbre(id2).randtree()
 
     def coupletree(self):
         return (self.__tree1 , self.__tree2)
@@ -61,7 +61,21 @@ class Generateur2arbresandassoctable():
     def couplelistenode(self):
         return (self.coupletree()[0].listnodess() , self.coupletree()[1].listenodes())
 
-    def
+    def randomassignement(self):
+        l1 , l2 = self.couplelistenode()
+        def randomtransfo(l) :
+            if l == [] :
+                return l
+            else
+                i = random.randint(0,1)
+                return [(l[0] , i)] + randomtransfo(l[1:])
+        return (randomtransfo(l1) , randomtransfo(l2))
+
+
+     def randotailleclasse(self):
+
+
+
 
 u = Generateur_arbre(5)
 u.randtree()
@@ -74,4 +88,3 @@ def fiftyshadesoftress(x):
     for i in range(x):
         l += [Generateur_arbre( i )]
         return l
-
