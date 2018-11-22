@@ -1,4 +1,6 @@
 import os
+from arbreetnoueuds import Tree,Node
+
 
 
 def is_empty(file):
@@ -11,7 +13,7 @@ def is_empty(file):
 
 
 def allowed_word(identifiant):
-    if identifant == "block" or identifiant == "end" or identifiant == "port":
+    if identifiant == "block" or identifiant == "end" or identifiant == "port":
         return False
     else:
         return True
@@ -25,108 +27,144 @@ def rebuilt_file(liste , file ):
         f.write(b + "  ")
     f.close()
 
-def get_word(file):
+def get_chaine(file):
     if is_empty(file):
         print("no word in an empty file")
     else :
-        f = open(file , r )
+        f = open(file , "r" )
         chaine = f.readline()
+        d = chaine
         while chaine != "":
-            chaine += " " + f.readline()
-        rebuilt_file(chaine.split()[1:] , f)
+            chaine = f.readline()
+            d += " " + chaine
         f.close()
-        return chaine.split()[0]
+        return d.split()
 
-def parse_end(file , tree , current_node):
-    if is_empty_file(file):
+def get_el(liste):
+    if liste ==[] :
+        return None
+    else :
+        u = liste[0]
+        liste.remove(liste[0])
+        return u
+
+
+
+def parse_end(liste , tree , current_node):
+    if liste == [] :
         return tree
     else :
-        if tree.is_root(current_node):
-            return tree
-        elif tree.is_root(tree.ancestor(current_node)):
-            x = get_word(file)
-            if not allowed_word(x):
-               tree.add_node(x , c)
-               current_node = tree.ancestor(current_node)
-               if x == "block":
-                   return parse_block(file , tree , current_node)
-               elif x == "end":
-                   return tree
-               else :
-                   return parse_port(file , tree , current_node)
-            else :
-                print(" not a well formed model")
-        else :
-            x = get_word(file)
-            if not allowed_word(x):
-                tree.add_node(x, c)
-                current_node = tree.ancestor(current_node)
-                if x == "block":
-                    return parse_block(file, tree, current_node)
-                elif x == "end":
-                    return parse_end(file , tree , current_node)
-                else:
-                    return parse_port(file, tree, current_node)
+        x = get_el(liste)
+        print(x)
+        if not allowed_word(x):
+            current_node = tree.ancestor(current_node)
+            print(tree.nodes())
+            if x == "block":
+                return parse_block(liste, tree, current_node)
+            elif x == "end":
+                return parse_end(liste , tree , current_node)
             else:
-                print(" not a well formed model")
+                return parse_port(liste, tree, current_node)
+        else:
+            print(" not a well formed model")
 
 
-def parse_block(file , tree , current_node):
-    if is_empty(file):
+def parse_block(liste, tree , current_node):
+    if liste == []:
         print("not a well formed model")
     else :
-        b = get_word(file)
+        b = get_el(liste)
+        print(b)
         if allowed_word(b):
             if current_node == None :
-                tree.add_node(b)
+                tree.addroot(b)
                 current_node = b
-            else :
-                tree.add_node(b , current_node)
-                current_node = b
-                if is_empty_file:
+                print(tree.nodes())
+                if liste == []:
                     print("not a well formed model")
                 else:
-                    x = get_word(file)
+                    x = get_el(liste)
+                    print(x)
                     if allowed_word(x):
                         print("not a well formed model")
                     else:
                         if x == "block":
-                            parse_block(file, tree , current_node)
+                            return parse_block(liste, tree , current_node)
                         elif x == "end" :
-                            parse_end(file ,tree , current_node)
+                            return parse_end(liste ,tree , current_node)
                         else :
-                            parse_port(file , tree , current_node)
+                            return parse_port(liste , tree , current_node)
+            else :
+                tree.addnod(b, current_node)
+                current_node = b
+                print(tree.nodes())
+                if liste == []:
+                    print("not a well formed model")
+                else:
+                    x = get_el(liste)
+                    print(x)
+                    if allowed_word(x):
+                        print("not a well formed model")
+                    else:
+                        if x == "block":
+                            return parse_block(liste, tree , current_node)
+                        elif x == "end" :
+                            return parse_end(liste ,tree , current_node)
+                        else :
+                            return parse_port(liste , tree , current_node)
+        else:
+            print("not a well formed model")
 
-def parse_port(file , tree , current_node):
-    if is_empty(file):
+def parse_port(liste , tree , current_node):
+    if liste == []:
         print("not a well formed model")
     else :
-        p = get_word(file)
+        p = get_el(liste)
+        print(p)
         if allowed_word(p):
-            tree.add_node(p , current_node)
-            if is_empty_file:
+            tree.addnod(p , current_node)
+            print(tree )
+            if liste == []:
                 print("not a well formed model")
             else:
-                x = get_word(file)
+                x = get_el(liste)
+                print(x)
+                print(liste)
+                print(current_node)
+                print(tree.is_root("System"))
+                print(allowed_word(x))
+                print(x == "end")
                 if allowed_word(x):
                     print("not a well formed model")
                 else:
                     if x == "block":
-                        parse_block(file, tree , current_node)
-                    elif x == "end" :
-                        parse_end(file ,tree , current_node)
+                        return parse_block(liste, tree , current_node)
+                    elif x == "end":
+                        return parse_end(liste ,tree , current_node)
                     else :
-                        parse_port(file , tree , current_node)
+                        return parse_port(liste , tree , current_node)
+        else:
+            print("not a well formed model ")
 
 
 def parser(file):
-    if is_empty(file):
-        t = tree()
+    liste = get_chaine(file)
+    if liste == [] :
+        t = Tree([])
         return t
     else :
+        x = get_el(liste)
         if x == "block":
-            t = tree()
+            t = Tree([])
             current_node = None
-            return parse_block(file , t , current_node )
+            return  parse_block(liste , t , current_node )
         else :
             print( " not a well formed model")
+
+
+l = parser("ex3")
+print(l.nodes())
+l.displaytree()
+
+vb = parser("ex4" )
+vb.displaytree()
