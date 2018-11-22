@@ -1,5 +1,6 @@
 from assoctable import Assoctable
 from arbreetnoueuds import Tree, Node
+from generateurdexemple import *
 
 
 
@@ -66,8 +67,8 @@ def compare(la , ld , file  , assoct , tree1 , tree2 ):
                 ld += tree1.subtreey(x).listnodess()[1:]
                 return compare(la, ld, file[1:], assoct, tree1, tree2)
             else :
-                l1 = x.children()
-                l2 = z.children()
+                l1 = tree1.childnode(x)
+                l2 = tree2.childnode(x)
                 i , l = diffandsim(l1 , l2 , assoct , [] , [] )
                 la += i
                 ld += l
@@ -77,7 +78,11 @@ def compare(la , ld , file  , assoct , tree1 , tree2 ):
 def comparaison(tree1 , tree2 , assoctab):
     x1 = tree1.root()
     x2 = tree2.root()
-    liste1 = x1.children()
-    liste2 = x2.children()
+    liste1 = tree1.childnode()
+    liste2 = tree2.childnode()
     la , ld = diffandsim(liste1 , liste2 , assoctable )
     return compare(la ,ld , la , assoctab , tree1 , tree2)
+
+c = Generateur2arbresandassoctable(1 , 2 )
+x1 , x2 = c.coupletree()
+print(comparaison(x1 , x2 , []))
