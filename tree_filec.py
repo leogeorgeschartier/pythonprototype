@@ -14,16 +14,16 @@ class Node:
     def identifier(self):
         return self.__identifier
 
-    def children(self):
-        return self.__children
+    #def children(self):
+        #return self.__children
 
-    def add_child(self, identifier):
-        self.__children.append(identifier)
+    #def add_child(self, identifier):
+        #self.__children.append(identifier)
 
 n = Node("e",Node.BLOCK)
 n.identifier()
-n.add_child("r")
-n.children()
+#n.add_child("r")
+#n.children()
 
 class Tree:
     def __init__(self):
@@ -110,6 +110,21 @@ class Tree:
         t = Tree(subtree(self.nodes() , a))
         return t
 
+    def childnode(self , node):
+        t = self.subtreey(node)
+        def get_first(l):
+            d = []
+            if l == []:
+                return l
+            else:
+                d += l[0][0] + get_first(l[1:])
+            return d
+        if self.is_a_leaf(node):
+            return []
+        else :
+            return get_first(t.nodes()[1:])
+
+
     def addnod(self , x , y):
         def belongsto(arbre , x):
             if arbre == []:
@@ -153,7 +168,7 @@ class Tree:
         return self
 
     def is_a_leaf(self, node):
-        d = self.subtreey(node)
+        d = self.subtreey(node).nodes()
         if d[1] == []:
             return True
         else:
@@ -162,7 +177,7 @@ class Tree:
 
     def list_leaf(self):
         d = []
-        for a in self.nodes():
+        for a in self.listnodess():
             if self.is_a_leaf(a):
                 d += [a]
         return d
@@ -198,43 +213,47 @@ class Tree:
             else:
                 return False
 
-    def one_way_to_root(self, identifiant):
-        if self.is_root(identifiant):
+    def commonancestor(self ,node1 , node2 ):
+        if self.ancestor(node1) == self.ancestor(node2):
             return True
-        else:
-            return self.one_way_to_root(self.ancestor(identifiant))
-
-    def one_and_only_root(self):
-        d = 0
-        for a in self.nodes().keys():
-            if self.is_root(a):
-                d += 1
-        if d == 1:
-            return True
-        else:
+        else :
             return False
 
-    def well_formed(self):
-        d = True
-        for a in self.list_leaf():
-            if self.one_and_only_root() and self.one_way_to_root(a):
-                d = True and d
-            else:
-                d = False and d
-        return d
+    #def one_way_to_root(self, identifiant):
+        #if self.is_root(identifiant):
+         #   return True
+        #else:
+         #   return self.one_way_to_root(self.ancestor(identifiant))
+
+    #def one_and_only_root(self):
+     #   d = 0
+     #   for a in self.nodes().keys():
+      #      if self.is_root(a):
+       #         d += 1
+        #if d == 1:
+            #return True
+       # else:
+        #    return False
+
+    #def well_formed(self):
+     #   d = True
+      #  for a in self.list_leaf():
+       #     if self.one_and_only_root() and self.one_way_to_root(a):
+        #        d = True and d
+         #   else:
+          #      d = False and d
+        #return d
 
 
-    def branch_level(self, identifiant):
-        if self.well_formed():
-            if self.belongs_to_tree(identifiant):
-                if self.is_root(identifiant):
-                    return 0
-                else:
-                    return 1 + self.branch_level(self.ancestor(identifiant))
+    def branch_level(self, node):
+        if self.is_root(node):
+            return 0
+        else:
+            return 1 + self.branch_level(self.ancestor(node))
 
     def list_of_node_at_level_n(self, n):
         d = []
-        for a in self.nodes():
+        for a in self.listnodess():
             if self.branch_level(a) == n:
                 d += [a]
         return d
@@ -252,6 +271,43 @@ class Tree:
         return d
 
 
+    def auxdisplaytree(self):
+        d = 0
+        for i in  range(self.hauteur()+ 1 ):
+            d = max(d , len(self.list_of_node_at_level_n(i)))
+        return d
+
+    def displaytree(self):
+        def blankiterate(t , d):
+            r =""
+            for i in range(d - t ):
+                r += " "
+            return r
+        n = Node("azertyuiop" , Node.BLOCK)
+        y = ""
+        for i in range(self.hauteur()+ 1 ):
+            for j in range(len(self.list_of_node_at_level_n(i))):
+                if self.commonancestor(n , self.list_of_node_at_level_n(i)[j]):
+                    y += str(self.list_of_node_at_level_n(i)[j]) + "  "
+                    n = self.list_of_node_at_level_n(i)[j]
+                else :
+                    y += "     " + str(self.list_of_node_at_level_n(i)[j]) + "     "
+                    n = self.list_of_node_at_level_n(i)[j]
+            print(blankiterate(len(self.list_of_node_at_level_n(i)) , self.auxdisplaytree()) + y + blankiterate(len(self.list_of_node_at_level_n(i)) , self.auxdisplaytree()) )
+            y = ""
+            n = Node("azertyuiop" , Node.BLOCK)
+
+def blankiterate(t, d):
+    r = ""
+    for i in range(d - t):
+        r += " "
+    return r
+
+"""print(blankiterate(4 , 8) + "1")
+
+
+
+
 
 t = Tree([])
 print(t.is_empty())
@@ -267,6 +323,7 @@ print(t.nodes())
 t.addnod(v ,n)
 print(t.nodes())
 t.addnod(m , v)
+t.addnod(y , v)
 print(t.nodes())
 print(t.ancestor(v).identifier())
 print(t.root().identifier())
@@ -274,3 +331,9 @@ print(t.belongstotree(y))
 print(t.is_root(n))
 print(t.subtreey(v))
 print(t.subtreey(v).listnodess())
+
+print(t.auxdisplaytree())
+
+t.displaytree()
+
+print(t.list_of_node_at_level_n(2))"""
