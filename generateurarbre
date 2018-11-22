@@ -31,7 +31,7 @@ class Generateur_arbre():
         def randchoiceofparents(h):
             p = len(h)
             o = random.randint(0, p-1)
-            n = h[0]
+            n = h[o]
             return n
         def randchoiceofnodes( k ):
             x1 = len(k)
@@ -49,6 +49,14 @@ class Generateur_arbre():
                 return randtree(y , tree)
         return randtree(l , t)
 
+def randchoiceofparents(h):
+            p = len(h)
+            o = random.randint(0, p-1)
+            n = h[o]
+            return n
+
+print(randchoiceofparents([8 , 9 ,10 , 11 , 12 , 13 , 14 ]))
+
 
 class Generateur2arbresandassoctable():
     def __init__(self , id1 , id2 ):
@@ -59,32 +67,111 @@ class Generateur2arbresandassoctable():
         return (self.__tree1 , self.__tree2)
 
     def couplelistenode(self):
-        return (self.coupletree()[0].listnodess() , self.coupletree()[1].listenodes())
+        return (self.coupletree()[0].listnodess() , self.coupletree()[1].listnodess())
 
     def randomassignement(self):
         l1 , l2 = self.couplelistenode()
         def randomtransfo(l) :
             if l == [] :
                 return l
-            else
+            else:
                 i = random.randint(0,1)
                 return [(l[0] , i)] + randomtransfo(l[1:])
-        return (randomtransfo(l1) , randomtransfo(l2))
+        return randomtransfo(l1) , randomtransfo(l2)
 
 
-     def randotailleclasse(self):
+    def randoclasse(self):
+        def randoarrangement(l1 , l2):
+            if l1 == [] or l2 == []:
+                return None
+            else:
+                c= []
+                d =[]
+                i = len(l1)
+                o = len(l2)
+                x = random.randint(0 , i - 1)
+                for i in range(x):
+                    d = [l1[random.randint(0,i)]] + d
+                    l1.remove(d[0])
+                j =  random.randint(0 , o - 1)
+                for r in range(j):
+                    c = [l2[random.randint(0,r)]] + c
+                    l2.remove(c[0])
+                return d + c
+        return randoarrangement(self.randomassignement())
+
+    def randoassoctable(self):
+        table = Assoctable()
+        e , f = self.randomassignement()
+        def randoarrangement(l1, l2):
+            if l1 == [] or l2 == []:
+                return None
+            else:
+                c = []
+                d = []
+                i = len(l1)
+                o = len(l2)
+                x = random.randint(0, i - 1)
+                for i in range(x):
+                    mi = random.randint(0, len(l1)-1)
+                    d = [l1[mi]] + d
+                    l1.remove(d[0])
+                j = random.randint(0, o - 1)
+                for r in range(j):
+                    mo = random.randint(0, len(l2)-1)
+                    c = [l2[mo]] + c
+                    l2.remove(c[0])
+                return d + c
+        while randoarrangement(e , f) != None:
+            table.addclasse(randoarrangement(e,f))
+        if e == []:
+            m = table.classes()[0] + f
+            table.delete(table.classes()[0])
+            table.addclasse(m )
+        else :
+            b = table.classes()[0] + f
+            table.delete(table.classes()[0])
+            table.addclasse(b)
+        return table
+
+
+c = Generateur2arbresandassoctable(1 , 2 )
+#print(c.randoassoctable().classes())
 
 
 
 
-u = Generateur_arbre(5)
-u.randtree()
+#u = Generateur_arbre(5)
+#u.randtree().displaytree()
 
-print(u.randtree())
-print(u.randtree().listnodess())
 
-def fiftyshadesoftress(x):
-    l= []
-    for i in range(x):
-        l += [Generateur_arbre( i )]
-        return l
+def randoarrangement(l1, l2):
+    if l1 == [] or l2 == []:
+        return None
+    else:
+        c = []
+        d = []
+        i = len(l1)
+        o = len(l2)
+        x = random.randint(0, i - 1)
+        for i in range(x):
+            mi = random.randint(0, len(l1)-1)
+            d = [l1[mi]] + d
+            l1.remove(d[0])
+        j = random.randint(0, o - 1)
+        for r in range(j):
+            mo = random.randint(0, len(l2)-1)
+            c = [l2[mo]] + c
+            l2.remove(c[0])
+        return (d + c ) ,( l1 , l2 )
+
+print(randoarrangement([1,2,3,4,5] , [6,7,8,9,11 ,12 ,13 ,14 ,15 ]))
+
+"""def epuiserandoraangement(l1 , l2 ):
+    i = 0
+    while not randoarrangement(l1 ,l2) == None:
+        i += 1
+        randoarrangement(l1 ,l2)
+    return i 
+
+print(epuiserandoraangement([1,2,3,4,5] , [6,7,8,9,11 ,12 ,13 ,14 ,15 ])) """
