@@ -1,0 +1,125 @@
+from enum import Enum
+
+
+class OpFunction(Enum):
+    NEWB = 1
+    NEWV = 2
+    MOVS =  3
+    SEND =  4
+    SET =  5
+    DELETE =  6
+
+
+
+class Functions():
+
+    def __init__(self):
+        self.content = []
+
+
+
+    def makeNewBlockFunction(self , function , label , destinationpath ):
+        self.content = [OpFunction.NEWB , function ,  label , destinationpath  ]
+
+    def IsNewBFunction(self):
+        if self.content[0] == OpFunction.NEWB:
+            return True
+        else :
+            return False
+
+    def makeNewVarfunction(self , function , label , label_type , value  , destinationpath ):
+        self.content = [OpFunction.NEWV , function , label , label_type , value  , destinationpath ]
+
+    def IsNewVFunction(self):
+        if self.content[0] == OpFunction.NEWV:
+            return True
+        else :
+            return  False
+
+    def makeMovefunction(self , function , destinationpath , currentpath  ):
+        self.content = [OpFunction.MOVS , function ,  currentpath , destinationpath ]
+
+    def IsMoveFunction(self):
+        if self.content[0] == OpFunction.MOVS:
+            return True
+        else :
+            return  False
+
+    def MakeSendFunction(self , function , destinationpath , currentpath  ):
+        self.content = [OpFunction.SEND , function , currentpath , destinationpath ]
+
+
+    def IsSendFunction(self):
+        if self.content[0] == OpFunction.SEND:
+            return True
+        else :
+            return  False
+
+
+    def IsDeleteFunction(self):
+        if self.content[0] == OpFunction.DELETE:
+            return True
+        else :
+            return  False
+
+    def IsSetFunction(self):
+        if self.content[0] == OpFunction.SET:
+            return True
+        else :
+            return  False
+
+
+    def MakeDeleteFunction(self , function ,  currentpath  ):
+        self.content = [OpFunction.DELETE , function , currentpath]
+
+    def MakeSetFunction(self , function , value  ,  currentpath  ):
+        self.content = [ OpFunction.SET, function , value , currentpath]
+
+
+    def GetLabelNewBlock(self):
+        return self.content[2]
+
+    def GetLabelNewVar(self):
+        return self.content[2]
+
+    def GetDestinationPathNewBlock(self):
+        return self.content[3]
+
+    def GetDestinationPathNewVar(self):
+        return self.content[5]
+
+
+    def GetLabelTypeNewVar(self):
+        return self.content[3]
+
+    def GetValueNewVar(self):
+        return self.content[4]
+
+
+
+    def NextFunction(self):
+        return self.content[1]
+
+    def IsAtomicFunction(self):
+        if self.NextFunction() == None:
+            return True
+        else :
+            return False
+
+    def GetCurrentPathMove(self):
+        return self.content[2]
+
+    def GetDestinationPathMove(self):
+        return self.content[3]
+
+    def GetCurrentPathSend(self):
+        return self.content[2]
+
+    def GetDestinationPathSend(self):
+        return self.content[3]
+
+    def GetValueSet(self):
+        return self.content[2]
+
+    def GetCurrentPathSet(self):
+        return self.content[3]
