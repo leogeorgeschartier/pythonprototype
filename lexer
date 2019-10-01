@@ -1,0 +1,1488 @@
+from enum import*
+
+class token(Enum):
+    BLOCK = 1
+    END = 2
+    IDENTIFIER = 3
+    VAR = 4
+    INTEGER = 5
+    PROCESS = 6
+    SEQUENCE = 7
+    CHOICE = 8
+    PARALLEL = 9
+    COMPOSITION = 10
+    REC = 11
+    CONDITION = 12
+    PATH = 13
+    SEND = 14
+    DEL = 15
+    MOVE = 16
+    ASSIGN = 17
+    ADD = 18
+    MUL = 19
+    MINUS = 20
+    DIV = 21
+    MOD = 22
+    INF = 23
+    SUP = 24
+    SUPEQ = 25
+    INFEQ = 26
+    EQ = 27
+    BRACKETLEFT = 28
+    BRACKETRIGHT  = 29
+    ACTION = 31
+    GETVALUE = 32
+
+
+
+
+class lexer():
+
+    def __init__(self,file , word ):
+        self.content = file
+        self.colonne = 0
+        self.line = 0
+        self.currentline = file.readline()
+        self.allowedword = word
+        self.tokenlist = []
+        self.local = 0
+        self.endcount = 0
+
+    def IncColonne(self):
+        self.colonne +=1
+        self.currentline = self.currentline[1:]
+
+    def GetTokenList(self):
+        return self.tokenlist
+
+    def GetContent(self):
+        return self.content
+
+    def IncLine(self):
+        self.line += 1
+        self.colonne = 0
+        file = self.content
+        self.currentline = file.readline()
+
+    def MoveToNextWord(self):
+        if self.currentline == "" or self.currentline == "\n":
+            return False
+        else :
+            if self.currentline[0] == " ":
+               self.IncColonne()
+               self.MoveToNextWord()
+            else :
+                return True
+
+    def OneEspaceToken(self):
+        j = True
+        u = True
+        while j == True :
+            if self.currentline == "":
+                j = False
+                u = False
+            else :
+                if self.currentline == "\n":
+                    self.IncLine()
+                else :
+                    if self.GetFirstLineChar() == " ":
+                        self.IncColonne()
+                    else :
+                        j = False
+        return u
+
+
+    def GetFirstLineChar(self):
+        return self.currentline[0]
+
+
+
+
+
+    def SwitchLine(self):
+        if self.currentline == "" or self.currentline == "\n":
+           self.IncLine()
+           return True
+        else :
+            return False
+
+
+    def GetLocal(self):
+        return self.local
+
+    def GetColonne(self):
+        return self.colonne
+
+    def GetLine(self):
+        return self.line
+
+    def GetCurrentLine(self):
+        return self.currentline
+
+
+    def BlockVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "b":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "l":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "o":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "c":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "k":
+                                                self.tokenlist += [(token.BLOCK , "block" , self.GetLocal(), self.GetLine())]
+                                                self.local = self.GetColonne()
+                                                self.IncColonne()
+                                                return True
+        return False
+
+
+
+
+
+    def EndVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "e":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "n":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "d":
+                                self.tokenlist += [(token.END , "end" , self.GetLocal(), self.GetLine())]
+                                self.local = self.GetColonne()
+                                self.IncColonne()
+                                return True
+        return False
+
+
+
+
+    def IntegerVerifier(self):
+        if self.currentline == "" or self.currentline == "\n" or  self.GetFirstLineChar() == " ":
+            return False
+        if self.GetFirstLineChar() in "0987654321" :
+            j = self.GetFirstLineChar()
+            self.local = self.GetColonne()
+            self.IncColonne()
+            return self.SubIntegerVerifier(j )
+        else :
+            return False
+
+
+
+
+    def SubIntegerVerifier(self , word):
+        if self.currentline == "" or self.currentline == "\n" or self.GetFirstLineChar() == " ":
+            self.tokenlist += [( token.INTEGER , word , self.GetLocal() , self.GetLine())]
+            return True
+        j = self.GetFirstLineChar()
+        if j in "0987654321":
+            self.IncColonne()
+            return self.SubIntegerVerifier(word + j)
+        else :
+            return False
+
+
+
+    def SubIdentifier(self , word):
+        if self.currentline == "\n" or self.currentline == "" or self.GetFirstLineChar() == " ":
+            self.tokenlist += [( token.IDENTIFIER , word , self.GetLocal() , self.GetLine())]
+            self.local = self.GetColonne()
+            return True
+        if self.GetFirstLineChar() in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN0987654321_":
+            j = self.GetFirstLineChar()
+            self.IncColonne()
+            return self.SubIdentifier(word + j)
+        else :
+            return False
+
+
+
+    def Identifier(self):
+        if self.currentline == "" or self.currentline == "\n":
+            return False
+        if self.GetFirstLineChar() in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN_":
+            j = self.GetFirstLineChar()
+            self.IncColonne()
+            return self.SubIdentifier(j)
+        else :
+            return False
+
+
+
+
+    def VariableVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "v":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "a":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "r":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "i":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "a":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if self.GetFirstLineChar() == "b":
+                                                            self.IncColonne()
+                                                            if not self.currentline == "":
+                                                                if self.GetFirstLineChar() == "l":
+                                                                    self.IncColonne()
+                                                                    if not self.currentline == "":
+                                                                        if self.GetFirstLineChar() == "e":
+                                                                            self.tokenlist += [ ( token.VAR ,"variable", self.GetLocal(),self.GetLine())]
+                                                                            self.IncColonne()
+                                                                            return True
+        return False
+
+
+    def LexTree(self):
+        if not self.BlockVerifier() == False :
+            self.endcount += 1
+            if not self.OneEspaceToken() == False :
+                if not self.Identifier() == False :
+                    if not self.OneEspaceToken() == False :
+                        if not self.GetCurrentLine() == "":
+                            return self.SubLexTree()
+        return False
+
+    def SubLexTree(self):
+        if self.GetFirstLineChar() == "v":
+            if not self.VariableVerifier() == False:
+                if not self.OneEspaceToken() == False:
+                    if not self.Identifier() == False:
+                        if not self.OneEspaceToken() == False:
+                            if not self.ArithLexer() == False:
+                                if not self.OneEspaceToken() == False :
+                                    return self.SubLexTree()
+        if self.GetFirstLineChar() == "b":
+            return self.LexTree()
+        if self.GetFirstLineChar() == "e":
+            if not self.EndVerifier() == False:
+                self.endcount -= 1
+                if self.endcount == 0:
+                    return True
+                else:
+                    j = True
+                    d = 0
+                    while j == True:
+                        if not self.OneEspaceToken() == False :
+                                if self.GetFirstLineChar() == "e":
+                                    if self.EndVerifier() == True:
+                                        self.endcount -= 1
+                                        if self.endcount == 0:
+                                            j = False
+                                            d = 4
+                                        else:
+                                            j = True
+                                    else:
+                                        j = False
+                                        d = 1
+                                else:
+                                    j = False
+                                    d = 2
+                        else:
+                            j = False
+                            d = 3
+                    if d == 1 or d == 3:
+                        return False
+                    if d == 2:
+                        if self.GetFirstLineChar() == "b":
+                            return self.LexTree()
+                        if self.GetFirstLineChar() == "v":
+                            if not self.VariableVerifier() == False:
+                                if not self.OneEspaceToken() == False:
+                                    if not self.Identifier() == False:
+                                        if not self.OneEspaceToken() == False:
+                                            if not self.ArithLexer() == False:
+                                                if not self.OneEspaceToken() == False :
+                                                    return self.SubLexTree()
+                    if d == 4:
+                        return True
+        return False
+
+
+
+
+
+
+    def ParallelTest(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "p":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "a":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "r":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "a":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "l":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if self.GetFirstLineChar() == "l":
+                                                            self.IncColonne()
+                                                            if not self.currentline == "":
+                                                                if self.GetFirstLineChar() == "e":
+                                                                    self.IncColonne()
+                                                                    if not self.currentline == "":
+                                                                        if self.GetFirstLineChar() == "l":
+                                                                            self.tokenlist += [ ( token.PARALLEL , "parallel", self.GetLocal(),self.GetLine())]
+                                                                            self.IncColonne()
+                                                                            return True
+        return False
+
+
+
+
+
+
+    def ChoiceTest(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "c":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "h":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "o":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "i":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "c":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if self.GetFirstLineChar() == "e":
+                                                        self.tokenlist += [(token.CHOICE , "choice", self.GetLocal() , self.GetLine())]
+                                                        self.IncColonne()
+                                                        return True
+        return False
+
+
+
+
+
+    def ActionVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "a":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "c":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "t":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "i":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "o":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if self.GetFirstLineChar() == "n":
+                                                        self.tokenlist += [(token.ACTION , "action", self.GetLocal() , self.GetLine())]
+                                                        self.IncColonne()
+                                                        return True
+        return False
+
+
+
+
+
+    def SequenceVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "s":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "q":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "u":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "e":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if self.GetFirstLineChar() == "n":
+                                                        self.IncColonne()
+                                                        if not self.currentline == "":
+                                                            if self.GetFirstLineChar() == "c":
+                                                                self.IncColonne()
+                                                                if not self.currentline == "":
+                                                                    if self.GetFirstLineChar() == "e":
+                                                                        self.tokenlist += [(token.SEQUENCE , "sequence", self.GetLocal() , self.GetLine())]
+                                                                        self.IncColonne()
+                                                                        return True
+        return False
+
+
+
+
+    def SequenceCloseVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "k":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "o":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "m":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "p":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "o":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if self.GetFirstLineChar() == "s":
+                                                        self.IncColonne()
+                                                        if not self.currentline == "":
+                                                            if self.GetFirstLineChar() == "i":
+                                                                self.IncColonne()
+                                                                if not self.currentline == "":
+                                                                    if self.GetFirstLineChar() == "t":
+                                                                        self.IncColonne()
+                                                                        if not self.GetFirstLineChar() == "":
+                                                                            if  self.GetFirstLineChar() == "i":
+                                                                                self.IncColonne()
+                                                                                if not self.GetFirstLineChar() == "":
+                                                                                    if  self.GetFirstLineChar() == "o":
+                                                                                        self.IncColonne()
+                                                                                        if not self.GetFirstLineChar() == "":
+                                                                                            if  self.GetFirstLineChar() == "n":
+                                                                                                self.tokenlist += [(token.COMPOSITION ,"komposition", self.GetLocal() , self.GetLine())]
+                                                                                                self.IncColonne()
+                                                                                                return True
+        return False
+
+
+
+
+
+
+    def ConditionVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "t":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "s":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "t":
+                                        self.tokenlist += [(token.CONDITION , "test", self.GetLocal() , self.GetLine())]
+                                        self.IncColonne()
+                                        return True
+        return False
+
+
+
+
+
+
+
+
+    def SequenceLexer(self):
+        if not self.currentline == "":
+            if self.SequenceVerifier() == True :
+                if not self.OneEspaceToken() == False :
+                    if self.ProcessLexer() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.ProcessLexer() == True :
+                                d = 0
+                                j = True
+                                while j == True:
+                                    if not self.OneEspaceToken() == False:
+                                        if self.ProcessLexer() == True:
+                                            j = True
+                                        else:
+                                            d = 0
+                                            j = False
+                                    else:
+                                        d = 1
+                                        j = False
+                                if d == 1:
+                                    return False
+                                if d == 0:
+                                    if self.GetFirstLineChar() == ")":
+                                        self.IncColonne()
+                                        self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                        return True
+
+
+
+
+
+
+        return False
+
+
+    def ParallelLexer(self):
+        if not self.currentline == "":
+            if self.ParallelTest() == True :
+                if not self.OneEspaceToken() == False :
+                    if self.ProcessLexer() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.ProcessLexer() == True :
+                                d = 0
+                                j = True
+                                while j == True:
+                                    if not self.OneEspaceToken() == False:
+                                        if self.ProcessLexer() == True:
+                                            j = True
+                                        else:
+                                            d = 0
+                                            j = False
+                                    else:
+                                        d = 1
+                                        j = False
+                                if d == 1:
+                                    return False
+                                if d == 0:
+                                    if self.GetFirstLineChar() == ")":
+                                        self.IncColonne()
+                                        self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                        return True
+        return False
+
+    def PlusLexer(self):
+        if not self.currentline == "":
+            if self.ChoiceTest() == True :
+                if not self.OneEspaceToken() == False :
+                    if self.ProcessLexer() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.ProcessLexer() == True :
+                                d = 0
+                                j = True
+                                while j == True:
+                                    if not self.OneEspaceToken() == False:
+                                        if self.ProcessLexer() == True:
+                                            j = True
+                                        else:
+                                            d = 0
+                                            j = False
+                                    else:
+                                        d = 1
+                                        j = False
+                                if d == 1:
+                                    return False
+                                if d == 0:
+                                    if self.GetFirstLineChar() == ")":
+                                        self.IncColonne()
+                                        self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                        return True
+        return False
+
+
+
+    def SequenceCloseLexer(self):
+        if not self.currentline == "":
+            if self.SequenceCloseVerifier() == True :
+                if not self.OneEspaceToken() == False :
+                    if self.ProcessLexer() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.ProcessLexer() == True :
+                                d = 0
+                                j = True
+                                while j == True :
+                                    if not self.OneEspaceToken() == False :
+                                        if self.ProcessLexer() == True :
+                                            j = True
+                                        else :
+                                            d = 0
+                                            j = False
+                                    else :
+                                        d = 1
+                                        j = False
+                                if d == 1 :
+                                    return False
+                                if d == 0 :
+                                    if self.GetFirstLineChar() == ")":
+                                        self.IncColonne()
+                                        self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                        return True
+        return False
+
+    def ProcessAction(self):
+        if not self.currentline == "":
+            if self.ActionVerifier() == True :
+                if not self.OneEspaceToken() == False :
+                    if self.FunctionVerifier() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.GetFirstLineChar() == ")":
+                                self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+
+    def delVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "d":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "l":
+                                self.IncColonne()
+                                self.tokenlist += [ ( token.DEL , "del" , self.GetLocal() , self.GetLine())]
+                                return True
+        return False
+
+
+
+
+
+    def sendVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "s":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "n":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar()  == "d":
+                                        self.IncColonne()
+                                        self.tokenlist += [(token.SEND ,"send" , self.GetLocal() , self.GetLine())]
+                                        return True
+        return False
+
+
+
+
+
+    def SubPathIdentifier(self, word):
+        if self.currentline == "\n" or self.currentline == "" or self.GetFirstLineChar() == " ":
+            if  word[-1] == ".":
+                return False
+            else :
+                self.tokenlist += [( token.PATH, word , self.GetLocal(), self.GetLine())]
+                self.local = self.GetColonne()
+                return True
+        if self.GetFirstLineChar() in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN0987654321_.":
+            j = self.GetFirstLineChar()
+            self.IncColonne()
+            return self.SubPathIdentifier(word + j)
+        else:
+            return False
+
+    def PathIdentifier(self):
+        if self.currentline == "" or self.currentline == "\n":
+            return False
+        if self.GetFirstLineChar() in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN_":
+            j = self.GetFirstLineChar()
+            self.local = self.GetColonne()
+            self.IncColonne()
+            return self.SubPathIdentifier(j)
+        else:
+            return False
+
+
+
+
+    def addCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "a":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "d":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "d":
+                                self.tokenlist += [ (token.ADD , "add" , self.GetLocal() , self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+    def Eq(self):
+        if not self.currentline == "":
+            if self.EqCheck() == True :
+                if not self.OneEspaceToken() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.OneEspaceToken() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.OneEspaceToken() == False  :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.IncColonne()
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            return True
+        return False
+
+
+
+    def Sup(self):
+        if not self.currentline == "":
+            if self.SupCheck() == True :
+                if not self.OneEspaceToken() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.OneEspaceToken() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.OneEspaceToken() == False :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.IncColonne()
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            return True
+        return False
+
+    def Inf(self):
+        if not self.currentline == "":
+            if self.InfCheck() == True :
+                if not self.OneEspaceToken() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.OneEspaceToken() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.OneEspaceToken() == False :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.IncColonne()
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            return True
+        return False
+
+
+    def InfEq(self):
+        if not self.currentline == "":
+            if self.InfEqCheck() == True :
+                if not self.OneEspaceToken() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.OneEspaceToken() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.OneEspaceToken() == False :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.IncColonne()
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            return True
+        return False
+
+    def SupEq(self):
+        if not self.currentline == "":
+            if self.SupEqCheck() == True :
+                if not self.MoveToNextWord() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.MoveToNextWord() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.MoveToNextWord() == False :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.IncColonne()
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            return True
+        return False
+
+
+    def Div(self):
+        if not self.currentline == "":
+            if self.DivCheck() == True :
+                if not self.MoveToNextWord() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.MoveToNextWord() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.MoveToNextWord() == False :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.IncColonne()
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            return True
+        return False
+
+
+
+    def MinusCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "m":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "i":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "n":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "u":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "s":
+                                                self.tokenlist += [(token.MINUS , "minus" , self.GetLocal() , self.GetLine())]
+                                                self.IncColonne()
+                                                return True
+        return False
+
+
+
+
+
+    def Minus(self):
+        if not self.currentline == "":
+            if self.MinusCheck() == True :
+                if not self.MoveToNextWord() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.MoveToNextWord() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.MoveToNextWord() == False :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            self.IncColonne()
+                                            return True
+        return False
+
+
+
+
+
+    def SupCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "s":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "u":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "p":
+                                self.tokenlist += [(token.SUP , "sup" , self.GetLocal() , self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+    def InfCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "i":
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "n":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "f":
+                                self.tokenlist += [ ( token.INF , "inf" , self.GetLocal() , self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+    def EqCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "e":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "q":
+                        self.tokenlist += [ (token.EQ , "eq" , self.GetLocal() , self.GetColonne())]
+                        self.IncColonne()
+                        return True
+        return False
+
+    def SupEqCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "g":
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "q":
+                                self.tokenlist += [ ( token.SUPEQ ,"geq" , self.GetLocal() , self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+    def InfEqCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "l":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "q":
+                                self.tokenlist += [( token.INFEQ , "leq" , self.GetLocal() , self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+    def DivCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "d":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "i":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "v":
+                                self.tokenlist += [(token.DIV , "div" , self.GetLocal() , self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+    def CongCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "c":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "o":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "n":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "g":
+                                        self.IncColonne()
+                                        self.tokenlist += [(token.MOD , "cong" , self.GetLocal() , self.GetLine())]
+                                        return True
+        return False
+
+
+
+
+    def timesCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "t":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "i":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "m":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar() == "e":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "s":
+                                                self.tokenlist += [(token.MUL , "times" , self.GetLocal() , self.GetLine())]
+                                                self.IncColonne()
+                                                return True
+        return False
+
+
+    def GetValCheck(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "v":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "a":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "l":
+                                if not self.currentline == "":
+                                    self.IncColonne()
+                                    if not self.currentline == "":
+                                        if self.GetFirstLineChar() == "u":
+                                            self.IncColonne()
+                                            if not self.currentline == "":
+                                                if self.GetFirstLineChar() == "e":
+                                                    self.tokenlist += [ (token.GETVALUE , "getval" , self.GetLocal() , self.GetLine())]
+                                                    self.IncColonne()
+                                                    return True
+        return False
+
+
+
+
+
+    def GetVal(self):
+        if not self.currentline == "":
+            if self.GetValCheck() == True :
+                if not self.OneEspaceToken() == False:
+                    if self.PathIdentifier() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.GetFirstLineChar() == ")" :
+                                self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+
+
+
+    def add(self):
+        if not self.currentline == "":
+            if self.addCheck() == True :
+                if not self.OneEspaceToken() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.OneEspaceToken() == False :
+                            if not self.ArithLexer() == False :
+                                d = 0
+                                j = True
+                                while j == True:
+                                    if not self.OneEspaceToken() == False:
+                                        if self.ArithLexer() == True:
+                                            j = True
+                                        else:
+                                            d = 0
+                                            j = False
+                                    else:
+                                        j = False
+                                        d = 1
+                                if d == 1:
+                                    return False
+                                if d == 0:
+                                    if self.GetFirstLineChar() == ")":
+                                        self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                        self.IncColonne()
+                                        return True
+        return False
+
+
+
+    def mul(self):
+        if not self.currentline == "":
+            if self.timesCheck() == True :
+                if not self.OneEspaceToken() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.OneEspaceToken() == False :
+                            if not self.ArithLexer() == False :
+                                d = 0
+                                j = True
+                                while j == True:
+                                    if not self.OneEspaceToken() == False:
+                                            if self.ArithLexer() == True:
+                                                j = True
+                                            else:
+                                                d = 0
+                                                j = False
+                                    else :
+                                        d = 1
+                                        j = False
+                                if d == 1:
+                                    return False
+                                if d == 0:
+                                    if self.GetFirstLineChar() == ")":
+                                        self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                        self.IncColonne()
+                                        return True
+        return False
+
+
+
+
+
+    def moveVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "m":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "o":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "v":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar()  == "e":
+                                        self.IncColonne()
+                                        self.tokenlist += [(token.MOVE , "move" , self.GetLocal() , self.GetLine())]
+                                        return True
+        return False
+
+    def assignVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "a":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "s":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "s":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if self.GetFirstLineChar()  == "i":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if self.GetFirstLineChar() == "g":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if self.GetFirstLineChar() == "n":
+                                                        self.IncColonne()
+                                                        self.tokenlist += [( token.ASSIGN , "assign" , self.GetLocal() , self.GetLine() ) ]
+                                                        return True
+        return False
+
+
+    def Cong(self):
+        if not self.currentline == "":
+            if self.CongCheck() == True :
+                if not self.OneEspaceToken() == False :
+                    if not self.ArithLexer() == False :
+                        if not self.OneEspaceToken() == False :
+                            if not self.ArithLexer() == False :
+                                if not self.currentline == "":
+                                    if not self.OneEspaceToken() == False :
+                                        if self.GetFirstLineChar() == ")":
+                                            self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                            self.IncColonne()
+                                            return True 
+        return False
+
+
+
+    def ArithLexer(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "(":
+                self.IncColonne()
+                self.tokenlist += [(token.BRACKETRIGHT , "(", self.GetLocal(), self.GetLine())]
+                if not self.OneEspaceToken() == False :
+                    if self.GetFirstLineChar() == "m":
+                        if self.Minus() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "a":
+                        if self.add() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "e":
+                        if self.Eq() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "t":
+                        if self.mul() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "s":
+                        if self.Sup() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "i":
+                        if self.Inf() == True :
+                            return  True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "l":
+                        if self.InfEq() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "g":
+                        if self.SupEq() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "d":
+                        if self.Div() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "v":
+                        if self.GetVal() == True :
+                            print("domoto")
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "c":
+                        if self.Cong() == True :
+                            return True
+                        else :
+                            return False
+                    else :
+                        return False
+            if self.GetFirstLineChar() in "1234567890":
+                if self.IntegerVerifier() == True :
+                    print("callonme")
+                    return  True
+                else :
+                    return False
+        return False
+
+
+
+
+
+    def FunctionVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "d":
+                if self.delVerifier() == True :
+                    if not self.OneEspaceToken() == False :
+                        if self.PathIdentifier() == True :
+                            return True
+                        else :
+                            return False
+                    else :
+                        return False
+                else :
+                    return False
+            if self.GetFirstLineChar() == "s":
+                if self.sendVerifier() == True :
+                    if not self.OneEspaceToken() == False :
+                        if self.PathIdentifier() == True :
+                            if not self.OneEspaceToken() == False :
+                                if self.PathIdentifier() == True :
+                                    return True
+                                else :
+                                    return False
+                            else :
+                                return False
+                        else :
+                            return False
+                    else :
+                        return False
+                else :
+                    return False
+            if self.GetFirstLineChar() == "m":
+                if self.moveVerifier() == True :
+                    if not self.OneEspaceToken() == False :
+                        if self.PathIdentifier() == True :
+                            if not self.OneEspaceToken() == False :
+                                if self.PathIdentifier() == True :
+                                    return True
+                                else :
+                                    return False
+                            else :
+                                return False
+                        else :
+                            return False
+                    else :
+                        return False
+                else :
+                    return False
+            if self.GetFirstLineChar() == "a":
+                if self.assignVerifier() == True :
+                    if not self.OneEspaceToken() == False :
+                        if self.PathIdentifier() == True :
+                            if not self.OneEspaceToken() == False :
+                                if self.ArithLexer() == True :
+                                    self.IncColonne()
+                                    return True
+                                else :
+                                    return False
+                            else :
+                                return False
+                        else :
+                            return False
+                    else :
+                        return False
+                else :
+                    return False
+            else :
+                return False
+        else :
+            return False
+
+
+
+
+
+
+    def ProcessCondition(self):
+        if not self.currentline == "":
+            if self.ConditionVerifier() == True :
+                if not self.OneEspaceToken() == False:
+                    if self.ArithLexer() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.GetFirstLineChar() == ")":
+                                self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+    def RecVerifier(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "r":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if self.GetFirstLineChar() == "c":
+                                self.tokenlist += [( token.REC , "rec" , self.GetColonne() , self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+    def ProcessRec(self):
+        if not self.currentline == "":
+            if self.RecVerifier() == True :
+                if not self.OneEspaceToken() == False :
+                    if self.ProcessLexer() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.GetFirstLineChar() == ")" :
+                                self.tokenlist += [(token.BRACKETLEFT, ")", self.GetLocal(), self.GetLine())]
+                                self.IncColonne()
+                                return True
+        return False
+
+
+    def ProcessLexer(self):
+        if not self.currentline == "":
+            if self.GetFirstLineChar() == "(":
+                self.tokenlist += [(token.BRACKETRIGHT, "(", self.GetLocal(), self.GetLine())]
+                self.IncColonne()
+                if not self.OneEspaceToken() == False :
+                    if self.GetFirstLineChar() == "s":
+                        if self.SequenceLexer() == True:
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "p":
+                        if self.ParallelLexer() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "c":
+                        if self.PlusLexer() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "a":
+                        if self.ProcessAction() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "r":
+                        if self.ProcessRec() == True :
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "k":
+                        if self.SequenceCloseLexer() == True:
+                            return True
+                        else :
+                            return False
+                    if self.GetFirstLineChar() == "t":
+                        if self.ProcessCondition() == True :
+                            return True
+                        else :
+                            return False
+                    else :
+                        return False
+                else :
+                    return False
+            else :
+                return False
+        else :
+            return False
+
+
+
+
+
+
+    def ProcessVerifier(self):
+        if not self.currentline == "":
+            if  self.GetFirstLineChar() == "p":
+                self.local = self.GetColonne()
+                self.IncColonne()
+                if not self.currentline == "":
+                    if  self.GetFirstLineChar() == "r":
+                        self.IncColonne()
+                        if not self.currentline == "":
+                            if  self.GetFirstLineChar() == "o":
+                                self.IncColonne()
+                                if not self.currentline == "":
+                                    if  self.GetFirstLineChar() == "c":
+                                        self.IncColonne()
+                                        if not self.currentline == "":
+                                            if  self.GetFirstLineChar() == "e":
+                                                self.IncColonne()
+                                                if not self.currentline == "":
+                                                    if  self.GetFirstLineChar() == "s":
+                                                        self.IncColonne()
+                                                        if not self.currentline == "":
+                                                            if  self.GetFirstLineChar() == "s":
+                                                                self.IncColonne()
+                                                                self.tokenlist += [(token.PROCESS , "process" , self.GetLocal() , self.GetColonne())]
+                                                                return True
+        return False
+
+    def ProcessLexFinal(self):
+        if not self.currentline == "":
+            if not self.ProcessVerifier() == False :
+                if not self.OneEspaceToken() == False :
+                    if self.Identifier() == True :
+                        if not self.OneEspaceToken() == False :
+                            if self.ProcessLexer() == True :
+                                if not self.OneEspaceToken() == False :
+                                    if self.EndVerifier() == True :
+                                        if not self.OneEspaceToken() == False :
+                                            return self.ProcessLexFinal()
+                                        else :
+                                            return True
+                                    else :
+                                        return False
+                                else :
+                                    return False
+                            else :
+                                return False
+                        else :
+                            return False
+                    else :
+                        return False
+                else :
+                    return False
+            else :
+                return False
+        else :
+            return False
+
+
+    def Lexer(self):
+        if self.LexTree() == True :
+            if not self.OneEspaceToken() == False :
+                print("moto")
+                return self.ProcessLexFinal()
+
+
+    def TokenList(self):
+        if self.Lexer() == True :
+            return self.GetTokenList()
+        else :
+            return False
