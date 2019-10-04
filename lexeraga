@@ -1,0 +1,758 @@
+from enum import*
+
+class token(Enum):
+    BLOCK = 1
+    END = 2
+    PIDENTIFIER = 3
+    VAR = 4
+    INTEGER = 5
+    PROCESS = 6
+    SEQUENCE = 7
+    CHOICE = 8
+    PARALLEL = 9
+    COMPOSITION = 10
+    REC = 11
+    CONDITION = 12
+    SEND = 14
+    DEL = 15
+    MOVE = 16
+    ASSIGN = 17
+    ADD = 18
+    TIMES = 19
+    MINUS = 20
+    DIV = 21
+    MOD = 22
+    INF = 23
+    SUP = 24
+    SUPEQ = 25
+    INFEQ = 26
+    EQ = 27
+    BRACKETLEFT = 28
+    BRACKETRIGHT  = 29
+    ACTION = 31
+    GETVALUE = 32
+    BIDENTIFIER = 33
+    VIDENTIFIER = 34
+    BPATH = 35
+    VPATH = 36
+
+
+
+
+class lexer():
+
+    def __init__(self,file ):
+        self.content = file
+        self.colonne = 0
+        self.line = 0
+        self.currentline = file.readline()
+        self.tokenlist = []
+        self.local = 0
+        self.endcount = 0
+
+    def IncColonne(self):
+        self.colonne +=1
+        self.currentline = self.currentline[1:]
+
+    def GetTokenList(self):
+        return self.tokenlist
+
+    def GetContent(self):
+        return self.content
+
+    def IncLine(self):
+        self.line += 1
+        self.colonne = 0
+        file = self.content
+        self.currentline = file.readline()
+
+    def MoveToNextWord(self):
+        if self.currentline == "" or self.currentline == "\n":
+            return False
+        else :
+            if self.currentline[0] == " ":
+               self.IncColonne()
+               self.MoveToNextWord()
+            else :
+                return True
+
+    def OneEspaceToken(self):
+        j = True
+        u = True
+        while j == True :
+            if self.currentline == "":
+                j = False
+                u = False
+            else :
+                if self.currentline == "\n":
+                    self.IncLine()
+                else :
+                    if self.GetFirstLineChar() == " ":
+                        self.IncColonne()
+                    else :
+                        j = False
+        return u
+
+
+    def GetFirstLineChar(self):
+        return self.currentline[0]
+
+
+
+
+
+    def SwitchLine(self):
+        if self.currentline == "" or self.currentline == "\n":
+           self.IncLine()
+           return True
+        else :
+            return False
+
+
+    def GetLocal(self):
+        return self.local
+
+    def GetColonne(self):
+        return self.colonne
+
+    def GetLine(self):
+        return self.line
+
+    def GetCurrentLine(self):
+        return self.currentline
+
+
+
+    def GeneralMethod(self):
+        if self.GetFirstLineChar() == "i":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "n":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "f":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                        self.tokenlist += [(token.INF , None , self.GetLocal() , self.GetLine() )   ]
+                    else :
+                        print("unknown token at line", self.GetLine() , "colonne" , self.GetColonne() )
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "b":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "l":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "o":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "c":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "k":
+                            self.IncColonne()
+                            if self.currentline == "" or  self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                self.tokenlist += [(token.BLOCK , None, self.GetLocal(), self.GetLine())]
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "p":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "r":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "o":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "c":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "e":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "s":
+                                self.IncColonne()
+                                if self.GetFirstLineChar() == "s":
+                                    self.IncColonne()
+                                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                        self.tokenlist += [(token.PROCESS , None , self.GetLocal() , self.GetLine())]
+                                    else:
+                                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            elif self.GetFirstLineChar() == "a":
+                self.IncColonne()
+                self.local = self.GetColonne()
+                if self.GetFirstLineChar() == "r":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "a":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "l":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "l":
+                                self.IncColonne()
+                                if self.GetFirstLineChar() == "e":
+                                    self.IncColonne()
+                                    if self.GetFirstLineChar() == "l":
+                                        self.IncColonne()
+                                        if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                            self.tokenlist += [(token.PARALLEL, None, self.GetLocal(), self.GetLine())]
+                                        else:
+                                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                    else:
+                                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "e":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "n":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "d":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                        self.tokenlist += [(token.END, None, self.GetLocal(), self.GetLine())]
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            elif self.GetFirstLineChar() == "q":
+                self.IncColonne()
+                if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                    self.tokenlist += [(token.EQ, None, self.GetLocal(), self.GetLine())]
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "g":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "e":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "q":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                        self.tokenlist += [(token.SUPEQ, None, self.GetLocal(), self.GetLine())]
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "l":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "e":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "q":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                        self.tokenlist += [(token.INFEQ, None, self.GetLocal(), self.GetLine())]
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "t":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "i":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "m":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "s":
+                            self.IncColonne()
+                            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                                self.tokenlist += [(token.TIMES, None, self.GetLocal(), self.GetLine())]
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "m":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "i":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "n":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "u":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "s":
+                            self.IncColonne()
+                            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                self.tokenlist += [(token.MINUS, None, self.GetLocal(), self.GetLine())]
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            elif self.GetFirstLineChar() == "o":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "v":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "e":
+                        self.IncColonne()
+                        if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                            self.tokenlist += [(token.MOVE, None, self.GetLocal(), self.GetLine())]
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                elif self.GetFirstLineChar() == "d":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                        self.tokenlist += [(token.MOD, None, self.GetLocal(), self.GetLine())]
+                    else :
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "d":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "i":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "v":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                        self.tokenlist += [(token.DIV , None, self.GetLocal(), self.GetLine())]
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            elif self.GetFirstLineChar() == "e":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "l":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                        self.tokenlist += [(token.DEL , None, self.GetLocal(), self.GetLine())]
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "v":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "a":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "l":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "u":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "e":
+                            self.IncColonne()
+                            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                self.tokenlist += [(token.GETVALUE, None, self.GetLocal(), self.GetLine())]
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                elif self.GetFirstLineChar() == "r" :
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "i":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "a":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "b":
+                                self.IncColonne()
+                                if self.GetFirstLineChar() == "l":
+                                    self.IncColonne()
+                                    if self.GetFirstLineChar() == "e":
+                                        self.IncColonne()
+                                        if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                            self.tokenlist += [(token.VAR, None, self.GetLocal(), self.GetLine())]
+                                        else:
+                                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                    else:
+                                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() in "1234567890" :
+             l = self.GetFirstLineChar()
+             self.IncColonne()
+             j = self.GetFirstLineChar()
+             l += j
+             while j in "1234567890" :
+                 self.IncColonne()
+                 j = self.GetFirstLineChar()
+                 l += j
+             if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                 self.tokenlist += [(token.INTEGER, l[0 : len( l) -1 ] , self.GetLocal() , self.GetLine())]
+             else :
+                 print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "c":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "h":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "o":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "i":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "c":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "e":
+                                self.IncColonne()
+                                if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                                    self.tokenlist += [(token.CHOICE, None, self.GetLocal(), self.GetLine())]
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            elif self.GetFirstLineChar() == "o":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "m":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "p":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "o":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "s":
+                                self.IncColonne()
+                                if self.GetFirstLineChar() == "i":
+                                    self.IncColonne()
+                                    if self.GetFirstLineChar() == "t":
+                                        self.IncColonne()
+                                        if self.GetFirstLineChar() == "i":
+                                            self.IncColonne()
+                                            if self.GetFirstLineChar() == "o":
+                                                self.IncColonne()
+                                                if self.GetFirstLineChar() == "n":
+                                                    self.IncColonne()
+                                                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                                        self.tokenlist += [(token.COMPOSITION, None, self.GetLocal(), self.GetLine())]
+                                                    else:
+                                                        print("unknown token at line", self.GetLine(), "colonne",self.GetColonne())
+                                                else:
+                                                    print("unknown token at line", self.GetLine(), "colonne",self.GetColonne())
+                                            else:
+                                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                        else:
+                                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                    else:
+                                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                elif self.GetFirstLineChar() == "n":
+                    self.IncColonne()
+                    self.local = self.GetColonne()
+                    if self.GetFirstLineChar() == "d":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "i":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "t":
+                                self.IncColonne()
+                                if self.GetFirstLineChar() == "i":
+                                    self.IncColonne()
+                                    if self.GetFirstLineChar() == "o":
+                                        self.IncColonne()
+                                        if self.GetFirstLineChar() == "n":
+                                            self.IncColonne()
+                                            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                                self.tokenlist += [(token.CONDITION, None, self.GetLocal(), self.GetLine())]
+                                            else:
+                                                print("unknown token at line", self.GetLine(), "colonne",self.GetColonne())
+                                        else:
+                                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                    else:
+                                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "a":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() == "s":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "s":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "i":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "g":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "n":
+                                self.IncColonne()
+                                if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                    self.tokenlist += [(token.ASSIGN, None, self.GetLocal(), self.GetLine())]
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            elif self.GetFirstLineChar() == "c":
+                self.IncColonne()
+                self.local = self.GetColonne()
+                if self.GetFirstLineChar() == "t":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "i":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "o":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "n":
+                                self.IncColonne()
+                                if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                                    self.tokenlist += [(token.ACTION , None, self.GetLocal(), self.GetLine())]
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            elif self.GetFirstLineChar() == "d":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "d":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                        self.tokenlist += [(token.ADD, None, self.GetLocal(), self.GetLine())]
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "r":
+            self.IncColonne()
+            if self.GetFirstLineChar() == "e":
+                self.IncColonne()
+                if self.GetFirstLineChar() == "c":
+                    self.IncColonne()
+                    if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                        self.tokenlist += [(token.REC , None, self.GetLocal(), self.GetLine())]
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "(":
+            self.IncColonne()
+            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                self.tokenlist += [(token.BRACKETRIGHT, None, self.GetLocal(), self.GetLine())]
+            else :
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == ")":
+            self.IncColonne()
+            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                self.tokenlist += [(token.BRACKETLEFT, None, self.GetLocal(), self.GetLine())]
+            else :
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "s":
+                self.IncColonne()
+                self.local = self.GetColonne()
+                if self.GetFirstLineChar() == "e":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "q":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "u":
+                            self.IncColonne()
+                            if self.GetFirstLineChar() == "e":
+                                self.IncColonne()
+                                if self.GetFirstLineChar() == "n":
+                                    self.IncColonne()
+                                    if self.GetFirstLineChar() == "c":
+                                        self.IncColonne()
+                                        if self.GetFirstLineChar() == "e":
+                                            self.IncColonne()
+                                            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                                                self.tokenlist += [(token.SEQUENCE , None, self.GetLocal(), self.GetLine())]
+                                            else:
+                                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                        else:
+                                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                    else:
+                                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                                else:
+                                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    elif self.GetFirstLineChar() == "n":
+                        self.IncColonne()
+                        if self.GetFirstLineChar() == "d":
+                            self.IncColonne()
+                            if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                                self.tokenlist += [(token.SEND, None, self.GetLocal(), self.GetLine())]
+                            else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                elif self.GetFirstLineChar() == "u":
+                    self.IncColonne()
+                    if self.GetFirstLineChar() == "p":
+                        self.IncColonne()
+                        if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                            self.tokenlist += [(token.SUP, None, self.GetLocal(), self.GetLine())]
+                        else:
+                            print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                    else:
+                        print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "P":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            l = ""
+            if self.GetFirstLineChar() in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN_" :
+                self.IncColonne()
+                j = self.GetFirstLineChar()
+                l += j
+                while j  in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN0987654321_" :
+                    self.IncColonne()
+                    j = self.GetFirstLineChar()
+                    l += j
+                if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n" :
+                    self.tokenlist += [(token.PIDENTIFIER, l[0 : ( len(l) - 1)], self.GetLocal(), self.GetLine())]
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "V":
+            self.IncColonne()
+            self.local = self.GetColonne()
+            l = ""
+            if self.GetFirstLineChar() in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN_" :
+                self.IncColonne()
+                j = self.GetFirstLineChar()
+                l += j
+                while j  in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN0987654321_" :
+                    self.IncColonne()
+                    j = self.GetFirstLineChar()
+                    l += j
+                if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                    self.tokenlist += [(token.VIDENTIFIER, l[0 : ( len(l) - 1)], self.GetLocal(), self.GetLine())]
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+            else:
+                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+        elif self.GetFirstLineChar() == "B":
+            l = self.GetFirstLineChar()
+            self.IncColonne()
+            self.local = self.GetColonne()
+            if self.GetFirstLineChar() in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN_":
+                self.IncColonne()
+                j = self.GetFirstLineChar()
+                l += j
+                p = True
+                v = 0
+                m = True
+                while j  in "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN0987654321_." :
+                    self.IncColonne()
+                    j = self.GetFirstLineChar()
+                    l += j
+                    if j == ".":
+                        if self.currentline[1] == "V":
+                            v +=1
+                        elif self.currentline[1] == "B":
+                            v = v
+                        else :
+                            m = False
+                        p = False
+                if self.currentline == "" or self.GetFirstLineChar() == " " or self.GetFirstLineChar() == "\n":
+                    if p == True :
+                        self.tokenlist += [(token.BIDENTIFIER, None, self.GetLocal(), self.GetLine())]
+                    else :
+                        if not v > 1 and m == True :
+                            k = l[::-1]
+                            t = k[0]
+                            o = ""
+                            while (not t == ".") :
+                                o = t
+                                k = k[1:]
+                                t = k[0]
+                            if o == "B":
+                                self.tokenlist += [(token.BPATH, l[0 : ( len(l) - 1)] , self.GetLocal(), self.GetLine())]
+                            else :
+                                self.tokenlist += [(token.VPATH, l[0 : ( len(l) - 1)], self.GetLocal(), self.GetLine())]
+                        else:
+                                print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+                else:
+                    print("unknown token at line", self.GetLine(), "colonne", self.GetColonne())
+
+    def TokenListfFile(self):
+        if not self.OneEspaceToken() == False :
+            if self.GeneralMethod() == "unknown token at line " + str(self.GetLine()) + " colonne " + str(self.GetColonne()) :
+                return 0
+            else :
+                return self.TokenListfFile()
+        else :
+            return self.GetTokenList()
+
+
+file = open( "fichier.txt" , "r")
+go = lexer(file)
+print(go.TokenListfFile())
