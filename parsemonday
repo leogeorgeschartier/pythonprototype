@@ -1,0 +1,1458 @@
+from lexeragain import*
+
+
+
+
+class typee(Enum):
+    BLOCKID = 1
+    END = 2
+    VARID = 4
+    INTEGER = 5
+    PROCESS = 6
+    SEQUENCE = 7
+    CHOICE = 8
+    PARALLEL = 9
+    COMPOSITION = 10
+    REC = 11
+    CONDITION = 12
+    VPATH = 13
+    SEND = 14
+    DEL = 15
+    MOVE = 16
+    ASSIGN = 17
+    ADD = 18
+    TIMES = 19
+    MINUS = 20
+    DIV = 21
+    MOD = 22
+    INF = 23
+    SUP = 24
+    SUPEQ = 25
+    INFEQ = 26
+    EQ = 28
+    BRACKETLEFT = 29
+    BRACKETRIGHT = 30
+    ACTION = 31
+    GETVALUE = 32
+    ROOT = 33
+    ARITH = 34
+    BPATH = 35
+
+
+class AbstractSyntaxNode():
+
+    def __init__(self , type , list , firsttoken , lasttoken ,identifiant , parent , numberforgraph):
+        self.type = type
+        self.childnode = list
+        self.firsttoken = firsttoken
+        self.lasttoken = lasttoken
+        self.identifiant = identifiant
+        self.parentnode = parent
+        self.numberforgraphviz = numberforgraph
+
+
+
+    def DecIdentifiant(self):
+        self.identifiant -= 1
+
+
+    def GetType(self):
+        return self.type
+
+    def GetIdentifiant(self):
+        return self.identifiant
+
+    def GetNumberForGraphviz(self):
+        return self.numberforgraphviz
+
+
+    def GetChildren(self):
+        return self.childnode
+
+    def GetFirstToken(self):
+        return self.firsttoken
+
+    def GetLastToken(self):
+        return self.lasttoken
+
+    def AddNodeToChild(self , node):
+        self.childnode += [node]
+
+    def GetParentNode(self):
+        return self.parentnode
+
+    def GetListNodes(self):
+        l = [self]
+        for a in self.GetChildren() :
+            l += a.GetListNodes()
+        return l
+
+
+    def GetListEdgesAndNodes(self):
+        l = self.GetListNodes()
+        k = []
+        for a in l :
+            for b in a.GetChildren():
+                k += [(a,b)]
+        return k
+
+    def IsADescendant(self , identifiant):
+        for a in self.GetChildren() :
+            if a.GetIdentifiant() == identifiant :
+                return True
+        return False
+
+    def ReturnDes(self , identifiant):
+        for a in self.GetChildren():
+            if a.GetIdentifiant() == identifiant :
+                return a
+
+    def SetId(self , id):
+        self.identifiant = id
+
+
+    def Remove(self , node1):
+        self.childnode.remove(node1)
+
+def SplitPath(path):
+    j = ""
+    l = []
+    for a in path :
+        if a == ".":
+            l += [j]
+            j = ""
+        else :
+            j += a
+    return l
+
+
+class AbstractSyntaxTree():
+
+    def __init__(self , root):
+        self.root = root
+
+    def GetRoot(self):
+        return self.root
+
+    def SetRoot(self , node):
+        self.root = node
+
+    def AddNodeToNode(self , nodeA , nodeB ):
+        nodeA.AddNodeToChild(nodeB)
+
+    def GetNodeFromPath(self , path):
+        x = self.GetRoot()
+        l = SplitPath(path)
+        while (not l == [] ) and x.IsADescendant( l[0]) :
+            x = x.ReturnDes(l[0])
+            l = l[1:]
+        return x
+
+
+    def GetValueFromPath(self , path):
+        node = self.GetNodeFromPath(path)
+        return node.GetIdentifiant()
+
+
+    def send(self , path1 , path2):
+        node1 = self.GetNodeFromPath(path1)
+        node2 = self.GetNodeFromPath(path2)
+        self.AddNodeToNode(node1 , node2)
+
+    def Del(self , path1):
+        node = self.GetNodeFromPath(path1)
+        parent_node = node.GetParentNode()
+        parent_node.Remove(node)
+
+    def move(self , path1 , path2):
+        self.send(path1 , path2)
+        self.Del(path1)
+
+    def AuxGetArithNodeFromTree(self , x, l):
+        for a in x.GetChildren():
+            if a.GetType() == typee.ARITH :
+                l += [a]
+            else :
+                l += self.AuxGetArithNodeFromTree( a , [])
+        return l
+
+    def GetArithNodeFromTree(self ):
+        x = self.GetRoot()
+        return self.AuxGetArithNodeFromTree(x ,[])
+
+
+
+
+
+
+
+
+
+
+
+
+class Parse():
+
+    def __init__(self , tokenlist):
+        self.tokenlist = tokenlist
+        self.nodecounterforgraphviz = 1
+        self.endcounter = 0
+        self.currentnode = AbstractSyntaxNode(typee.ROOT , [] , None , None , None, None, 0)
+        self.tree = AbstractSyntaxTree(self.currentnode)
+        self.bracketcounter = 0
+        self.bracketarithcounter = 0
+        self.currentnodeforarith = None
+
+    def AddNodeToTree(self, node):
+        self.tree.AddNodeToNode(self.currentnode , node )
+
+    def AddNodeToN(self, node1, node2):
+        self.tree.AddNodeToNode(node1 , node2)
+
+    def GetToRoot(self):
+        return self.tree.GetRoot()
+
+    def GetCurrentNode(self):
+        return self.currentnode
+
+    def GetToAncestor(self):
+        return self.currentnode.GetParentNode()
+
+    def ParseBlock(self):
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion" , self.tokenlist[0][2], "afterblock identifier expected")
+            return 1
+        elif self.tokenlist[1][0] == token.BIDENTIFIER :
+            node = AbstractSyntaxNode(typee.BLOCKID , [] , None , None , self.tokenlist[1][1] , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.endcounter += 1
+            self.ParseTree()
+        else :
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "after block , identifier expected")
+            return 1
+
+
+    def ParseVariable(self):
+        if len(self.tokenlist) == 1 :
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"after var , identifier expected")
+            return 1
+        if self.currentnode.GetType() == typee.BLOCKID :
+            if self.tokenlist[1][0] == token.VIDENTIFIER :
+                node = AbstractSyntaxNode(typee.VARID , [] , None , None , self.tokenlist[1][1] ,self.currentnode , self.nodecounterforgraphviz)
+                self.nodecounterforgraphviz += 1
+                self.AddNodeToTree(node)
+                self.tokenlist  = self.tokenlist[2:]
+                if not self.tokenlist == [] :
+                    node2 = AbstractSyntaxNode(typee.ARITH, [], None , None, None, node , self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node , node2)
+                    self.currentnodeforarith = node2
+                    self.ParseArithTree()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"after var , identifier expected")
+                    return 1
+            else :
+                print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "after var , identifier expected")
+                return 1
+        else :
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "before var , block expected")
+            return 1
+
+    def ParseEnd(self):
+        if self.endcounter == 0:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing block before end")
+            return 1
+        else :
+            if self.endcounter == 1 :
+                self.endcounter = 0
+                self.currentnode = self.GetToRoot()
+                self.tokenlist = self.tokenlist[1:]
+            else:
+                self.endcounter -= 1
+                self.currentnode = self.GetToAncestor()
+                self.tokenlist = self.tokenlist[1:]
+                self.ParseTree()
+
+
+
+    def ParseTree(self):
+        if self.tokenlist == [] :
+            print("cannot run an empty model")
+            return  1
+        if self.tokenlist[0][0] == token.BLOCK:
+            self.ParseBlock()
+            return 0
+        else :
+            if self.tokenlist[0][0] == token.VAR :
+                self.ParseVariable()
+                return 0
+            else :
+                if self.tokenlist[0][0] == token.END :
+                    self.ParseEnd()
+                    return 0
+                else :
+                    print( "romain")
+                    print("syntax error 9 , end, block or variable token were expected at line" , self.tokenlist[0][3] , "colonne", self.tokenlist[0][2] )
+                    return 1
+
+
+
+
+
+
+    def ParseAction(self):
+        print(self.tokenlist)
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing process after action")
+            return 1
+        else:
+            if self.tokenlist[1][0] == token.ASSIGN:
+                if self.tokenlist[2][0] == token.VPATH:
+                    node1 = AbstractSyntaxNode(typee.ASSIGN, [], None, None, None, self.currentnode , self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToTree(node1)
+                    node2 = AbstractSyntaxNode(typee.VPATH , [] , None , None , self.tokenlist[2][1] , node1 , self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node1 , node2)
+                    node3 = AbstractSyntaxNode(typee.ARITH , [] , None , None , None , node2 , self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node2 , node3)
+                    self.currentnodeforarith = node3
+                    self.tokenlist = self.tokenlist[3:]
+                    self.ParseArith()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after assign")
+                    return 1
+            elif self.tokenlist[1][0] == token.SEND :
+                if self.tokenlist[2][0] == token.BPATH :
+                    if self.tokenlist[3][0] == token.BPATH :
+                        node1 = AbstractSyntaxNode(typee.SEND, [], None, None, None, self.currentnode , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1] , node1 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.BPATH, [], None , None , self.tokenlist[3][1] , node2 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2 , node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseProcess()
+                    elif self.tokenlist[3][0] == token.VPATH :
+                        node1 = AbstractSyntaxNode(typee.SEND, [], None, None, None, self.currentnode,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[3][1], node2,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2, node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseProcess()
+                    else :
+                        print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after path")
+                        return 1
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "Missing  path after send")
+                    return 1
+            elif self.tokenlist[1][0] == token.MOVE :
+                if self.tokenlist[2][0] == token.BPATH :
+                    if self.tokenlist[3][0] == token.BPATH :
+                        node1 = AbstractSyntaxNode(typee.MOVE, [], None, None, None , self.currentnode , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.BPATH, [], None , None , self.tokenlist[3][1] , node2 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2 , node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseProcess()
+                    elif self.tokenlist[3][0] == token.VPATH :
+                        node1 = AbstractSyntaxNode(typee.MOVE, [], None, None, None, self.currentnode,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[3][1], node2,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2, node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseProcess()
+                    else :
+                        print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after path")
+                        return 1
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "Missing  path after move")
+                    return 1
+            elif self.tokenlist[1][0] == token.DEL :
+                if self.tokenlist[2][0] == token.BPATH :
+                    node1 = AbstractSyntaxNode(typee.DEL, [], None, None, None, self.currentnode , self.currentnodeforarith)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToTree(node1)
+                    node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1, self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node1, node2)
+                    self.tokenlist = self.tokenlist[3:]
+                    self.ParseProcess()
+                elif self.tokenlist[2][0] == token.VPATH :
+                    node1 = AbstractSyntaxNode(typee.DEL, [], None, None, None, self.currentnode,self.currentnodeforarith)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToTree(node1)
+                    node2 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[2][1], node1,self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node1, node2)
+                    self.tokenlist = self.tokenlist[3:]
+                    self.ParseProcess()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after path")
+                    return 1
+            else :
+                print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing function after action")
+                return 1
+
+
+
+
+
+
+
+
+
+
+
+    def ParseBrakcetRightProcess(self):
+        print(self.tokenlist)
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion" , self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+        elif self.tokenlist[1][0] == token.SEQUENCE :
+            node = AbstractSyntaxNode(typee.SEQUENCE , [] , None , None , 2 , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketcounter += 1
+            self.ParseProcess()
+        elif self.tokenlist[1][0] == token.PARALLEL :
+            node = AbstractSyntaxNode(typee.PARALLEL , [] , None , None , 2 , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketcounter += 1
+            self.ParseProcess()
+        elif self.tokenlist[1][0] == token.CHOICE :
+            node = AbstractSyntaxNode(typee.CHOICE , [] , None , None , 2  , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketcounter += 1
+            self.ParseProcess()
+        elif self.tokenlist[1][0] == token.COMPOSITION :
+            node = AbstractSyntaxNode(typee.COMPOSITION , [] , None , None , 2 , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketcounter += 1
+            self.ParseComposition()
+        elif self.tokenlist[1][0] == token.REC :
+            node = AbstractSyntaxNode(typee.REC , [] , None , None , 1 , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketcounter += 1
+            self.ParseProcess()
+        elif self.tokenlist[1][0] == token.ACTION :
+            node = AbstractSyntaxNode(typee.ACTION , [] , None , None , self.tokenlist[1][1] , self.currentnode, self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[1:]
+            self.bracketcounter += 1
+            self.ParseAction()
+        elif self.tokenlist[1][0] == token.CONDITION :
+            node = AbstractSyntaxNode(typee.CONDITION , [] , None , None , self.tokenlist[1][1] , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketcounter += 1
+            node1 = AbstractSyntaxNode(typee.ARITH, [], None, None, None, node, self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(node, node1)
+            self.currentnodeforarith = node1
+            self.ParseArith()
+        else :
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+
+
+    def ParseBracketRightComposition(self):
+        print(self.tokenlist)
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"after ( process operator expected")
+            return 1
+        elif self.tokenlist[1][0] == token.ACTION :
+            node = AbstractSyntaxNode(typee.ACTION , [] , None , None , self.tokenlist[1][1] , self.currentnode, self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[1:]
+            self.bracketcounter += 1
+            self.ParseActionInComposition()
+        elif self.tokenlist[1][0] == token.CONDITION :
+            node = AbstractSyntaxNode(typee.CONDITION , [] , None , None , self.tokenlist[1][1] , self.currentnode , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToTree(node)
+            self.currentnode = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketcounter += 1
+            node1 = AbstractSyntaxNode(typee.ARITH, [], None, None, None, node, self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(node, node1)
+            self.currentnodeforarith = node1
+            self.ParseArithCompositionSpecial()
+        else :
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+
+
+    def ParseActionInComposition(self):
+        print(self.tokenlist)
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing process after action")
+            return 1
+        else:
+            if self.tokenlist[1][0] == token.ASSIGN:
+                if self.tokenlist[2][0] == token.VPATH:
+                    node1 = AbstractSyntaxNode(typee.ASSIGN, [], None, None, None, self.currentnode , self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToTree(node1)
+                    node2 = AbstractSyntaxNode(typee.VPATH , [] , None , None , self.tokenlist[2][1] , node1 , self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node1 , node2)
+                    node3 = AbstractSyntaxNode(typee.ARITH , [] , None , None , None , node2 , self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node2 , node3)
+                    self.currentnodeforarith = node3
+                    self.tokenlist = self.tokenlist[3:]
+                    self.ParseArithComposition()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after assign")
+                    return 1
+            elif self.tokenlist[1][0] == token.SEND :
+                if self.tokenlist[2][0] == token.BPATH :
+                    if self.tokenlist[3][0] == token.BPATH :
+                        node1 = AbstractSyntaxNode(typee.SEND, [], None, None, None, self.currentnode , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1] , node1 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.BPATH, [], None , None , self.tokenlist[3][1] , node2 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2 , node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseComposition()
+                    elif self.tokenlist[3][0] == token.VPATH :
+                        node1 = AbstractSyntaxNode(typee.SEND, [], None, None, None, self.currentnode,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[3][1], node2,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2, node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseComposition()
+                    else :
+                        print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after path")
+                        return 1
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "Missing  path after send")
+                    return 1
+            elif self.tokenlist[1][0] == token.MOVE :
+                if self.tokenlist[2][0] == token.BPATH :
+                    if self.tokenlist[3][0] == token.BPATH :
+                        node1 = AbstractSyntaxNode(typee.MOVE, [], None, None, None , self.currentnode , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.BPATH, [], None , None , self.tokenlist[3][1] , node2 , self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2 , node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseComposition()
+                    elif self.tokenlist[3][0] == token.VPATH :
+                        node1 = AbstractSyntaxNode(typee.MOVE, [], None, None, None, self.currentnode,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToTree(node1)
+                        node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node1, node2)
+                        node3 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[3][1], node2,self.nodecounterforgraphviz)
+                        self.nodecounterforgraphviz += 1
+                        self.AddNodeToN(node2, node3)
+                        self.tokenlist = self.tokenlist[4:]
+                        self.ParseComposition()
+                    else :
+                        print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after path")
+                        return 1
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2], "Missing  path after move")
+                    return 1
+            elif self.tokenlist[1][0] == token.DEL :
+                if self.tokenlist[2][0] == token.BPATH :
+                    node1 = AbstractSyntaxNode(typee.DEL, [], None, None, None, self.currentnode , self.currentnodeforarith)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToTree(node1)
+                    node2 = AbstractSyntaxNode(typee.BPATH, [], None, None, self.tokenlist[2][1], node1, self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node1, node2)
+                    self.tokenlist = self.tokenlist[3:]
+                    self.ParseComposition()
+                elif self.tokenlist[2][0] == token.VPATH :
+                    node1 = AbstractSyntaxNode(typee.DEL, [], None, None, None, self.currentnode,self.currentnodeforarith)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToTree(node1)
+                    node2 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[2][1], node1,self.nodecounterforgraphviz)
+                    self.nodecounterforgraphviz += 1
+                    self.AddNodeToN(node1, node2)
+                    self.tokenlist = self.tokenlist[3:]
+                    self.ParseComposition()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing path after path")
+                    return 1
+            else :
+                print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"Missing function after action")
+                return 1
+
+
+    def ParseBracketRightArithComposition(self):
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion" , self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+        elif self.tokenlist[1][0] == token.ADD :
+            node = AbstractSyntaxNode(typee.ADD , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.MINUS :
+            node = AbstractSyntaxNode(typee.MINUS , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.TIMES:
+            node = AbstractSyntaxNode(typee.TIMES , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.DIV:
+            node = AbstractSyntaxNode(typee.DIV, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.MOD :
+            node = AbstractSyntaxNode(typee.MOD , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.EQ :
+            node = AbstractSyntaxNode(typee.EQ , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.SUPEQ :
+            node = AbstractSyntaxNode(typee.SUPEQ , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.INFEQ:
+            node = AbstractSyntaxNode(typee.INFEQ, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.INF:
+            node = AbstractSyntaxNode(typee.INF , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.SUP :
+            node = AbstractSyntaxNode(typee.SUP, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.INTEGER :
+            node = AbstractSyntaxNode(typee.INTEGER, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.GETVALUE :
+            node = AbstractSyntaxNode(typee.GETVALUE, [], None, None, None , self.currentnodeforarith, self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            if (not self.tokenlist == []) and self.tokenlist[0][0] == token.VPATH :
+                node1 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[0][1] ,node , self.nodecounterforgraphviz)
+                self.nodecounterforgraphviz += 1
+                self.AddNodeToN(node , node1)
+                self.tokenlist = self.tokenlist[1:]
+                self.ParseArithComposition()
+        else :
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+
+
+
+    def ParseBrakcetRightArith(self):
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion" , self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+        elif self.tokenlist[1][0] == token.ADD :
+            node = AbstractSyntaxNode(typee.ADD , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.MINUS :
+            node = AbstractSyntaxNode(typee.MINUS , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.TIMES:
+            node = AbstractSyntaxNode(typee.TIMES , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.DIV:
+            node = AbstractSyntaxNode(typee.DIV, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.MOD :
+            node = AbstractSyntaxNode(typee.MOD , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.EQ :
+            node = AbstractSyntaxNode(typee.EQ , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.SUPEQ :
+            node = AbstractSyntaxNode(typee.SUPEQ , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.INFEQ:
+            node = AbstractSyntaxNode(typee.INFEQ, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.INF:
+            node = AbstractSyntaxNode(typee.INF , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.SUP :
+            node = AbstractSyntaxNode(typee.SUP, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.INTEGER :
+            node = AbstractSyntaxNode(typee.INTEGER, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.GETVALUE :
+            node = AbstractSyntaxNode(typee.GETVALUE, [], None, None, None , self.currentnodeforarith, self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            if (not self.tokenlist == []) and self.tokenlist[0][0] == token.VPATH :
+                node1 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[0][1] ,node , self.nodecounterforgraphviz)
+                self.nodecounterforgraphviz += 1
+                self.AddNodeToN(node , node1)
+                self.tokenlist = self.tokenlist[1:]
+                self.ParseArith()
+        else :
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+
+    def ParseBrakcetRightArithSpecial(self):
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"after ( process operator expected")
+            return 1
+        elif self.tokenlist[1][0] == token.EQ:
+            node = AbstractSyntaxNode(typee.EQ, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.SUPEQ:
+            node = AbstractSyntaxNode(typee.SUPEQ, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.INFEQ:
+            node = AbstractSyntaxNode(typee.INFEQ, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.INF:
+            node = AbstractSyntaxNode(typee.INF, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        elif self.tokenlist[1][0] == token.SUP:
+            node = AbstractSyntaxNode(typee.SUP, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArith()
+        else:
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"after ( process operator expected")
+            return 1
+
+    def ParseBrakcetRightArithSpecialCompostion(self):
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion", self.tokenlist[0][2],"after ( process operator expected")
+            return 1
+        elif self.tokenlist[1][0] == token.EQ:
+            node = AbstractSyntaxNode(typee.EQ, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.SUPEQ:
+            node = AbstractSyntaxNode(typee.SUPEQ, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.INFEQ:
+            node = AbstractSyntaxNode(typee.INFEQ, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.INF:
+            node = AbstractSyntaxNode(typee.INF, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        elif self.tokenlist[1][0] == token.SUP:
+            node = AbstractSyntaxNode(typee.SUP, [], None, None, self.tokenlist[1][1], self.currentnodeforarith,self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithComposition()
+        else:
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"after ( process operator expected")
+            return 1
+
+
+    def ParseBrakcetRightArithTree(self):
+        if len(self.tokenlist) == 1:
+            print("Syntax error at line", self.tokenlist[0][3], "at postion" , self.tokenlist[0][2], "after ( process operator expected")
+        elif self.tokenlist[1][0] == token.ADD :
+            node = AbstractSyntaxNode(typee.ADD , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.MINUS :
+            node = AbstractSyntaxNode(typee.MINUS , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.TIMES:
+            node = AbstractSyntaxNode(typee.TIMES , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.DIV:
+            node = AbstractSyntaxNode(typee.DIV, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith, node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.MOD :
+            node = AbstractSyntaxNode(typee.MOD , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.EQ :
+            node = AbstractSyntaxNode(typee.EQ , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.SUPEQ :
+            node = AbstractSyntaxNode(typee.SUPEQ , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith,node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.INFEQ:
+            node = AbstractSyntaxNode(typee.INFEQ, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.INF:
+            node = AbstractSyntaxNode(typee.INF , [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.SUP :
+            node = AbstractSyntaxNode(typee.SUP, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN(self.currentnodeforarith,node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.INTEGER :
+            node = AbstractSyntaxNode(typee.INTEGER, [] , None , None , self.tokenlist[1][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            self.ParseArithTree()
+        elif self.tokenlist[1][0] == token.GETVALUE :
+            node = AbstractSyntaxNode(typee.GETVALUE, [], None, None, None , self.currentnodeforarith, self.nodecounterforgraphviz)
+            self.nodecounterforgraphviz += 1
+            self.AddNodeToN( self.currentnodeforarith , node)
+            self.currentnodeforarith = node
+            self.tokenlist = self.tokenlist[2:]
+            self.bracketarithcounter += 1
+            if (not self.tokenlist == []) and self.tokenlist[0][0] == token.VPATH :
+                node1 = AbstractSyntaxNode(typee.VPATH, [], None, None, self.tokenlist[0][1] ,node , self.nodecounterforgraphviz)
+                self.nodecounterforgraphviz += 1
+                self.AddNodeToN(node , node1)
+                self.tokenlist = self.tokenlist[1:]
+                self.ParseArithTree()
+        else :
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "after ( process operator expected")
+            return 1
+
+    def ParseBLeftArithComposition(self):
+        if self.bracketarithcounter == 0:
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "Missing ( before )")
+            return 1
+        elif self.bracketarithcounter == 1:
+            self.bracketarithcounter = 0
+            self.currentnodeforarith = None
+            self.tokenlist = self.tokenlist[1:]
+            self.ParseComposition()
+        else:
+            self.bracketarithcounter -= 1
+            self.currentnodeforarith = self.currentnodeforarith.GetParentNode()
+            self.tokenlist = self.tokenlist[1:]
+            self.ParseArithComposition()
+
+
+    def ParseBLeftArith(self):
+        if self.bracketarithcounter == 0:
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "Missing ( before )")
+            return 1
+        elif self.bracketarithcounter == 1:
+            self.bracketarithcounter = 0
+            self.currentnodeforarith = None
+            self.tokenlist = self.tokenlist[1:]
+            self.ParseProcess()
+        else:
+            self.bracketarithcounter -= 1
+            self.currentnodeforarith = self.currentnodeforarith.GetParentNode()
+            self.tokenlist = self.tokenlist[1:]
+            self.ParseArith()
+
+
+    def ParseBLeftArithTree(self):
+        if self.bracketarithcounter == 0:
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "Missing ( before )")
+            return 1
+        elif self.bracketarithcounter == 1:
+            self.bracketarithcounter = 0
+            self.currentnodeforarith = None
+            self.tokenlist = self.tokenlist[1:]
+            self.ParseTree()
+        else:
+            self.bracketarithcounter -= 1
+            self.currentnodeforarith = self.currentnodeforarith.GetParentNode()
+            self.tokenlist = self.tokenlist[1:]
+            self.ParseArithTree()
+
+    def ParseBLeftProcess(self):
+        print(self.tokenlist)
+        if self.bracketcounter == 0:
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "Missing ( before )")
+            return 1
+        elif self.bracketcounter == 1:
+            self.bracketcounter = 0
+            if self.currentnode.GetType() == typee.SEQUENCE or self.currentnode.GetType() == typee.PARALLEL or  self.currentnode.GetType() == typee.CHOICE :
+                if self.currentnode.GetIdentifiant() <= 0 :
+                    j = self.currentnode.GetParentNode()
+                    self.currentnode = j
+                    self.tokenlist = self.tokenlist[1:]
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"at least two process are expected after Parallel , choice or sequence")
+                    return 1
+            elif  self.currentnode.GetType() == typee.REC :
+                if self.currentnode.GetIdentifiant() == 0:
+                    j = self.currentnode.GetParentNode()
+                    self.currentnode = j
+                    self.tokenlist = self.tokenlist[1:]
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"one and only process expected after rec")
+                    return 1
+            else :
+                j = self.currentnode.GetParentNode()
+                self.currentnode = j
+                self.tokenlist = self.tokenlist[1:]
+        else:
+            self.bracketcounter -= 1
+            if self.currentnode.GetType() == typee.SEQUENCE or self.currentnode.GetType() == typee.PARALLEL or  self.currentnode.GetType() == typee.CHOICE :
+                if self.currentnode.GetIdentifiant() <= 0 :
+                    j = self.currentnode.GetParentNode()
+                    if j.GetType() == typee.SEQUENCE or j.GetType() == typee.PARALLEL or  j.GetType() == typee.CHOICE or j.GetType() == typee.REC :
+                        j.DecIdentifiant()
+                        self.currentnode = j
+                        self.tokenlist = self.tokenlist[1:]
+                        self.ParseProcess()
+                    else :
+                        self.currentnode = self.currentnode.GetParentNode()
+                        self.tokenlist = self.tokenlist[1:]
+                        self.ParseProcess()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"at least two process are expected after Parallel , choice or sequence")
+                    return 1
+            elif  self.currentnode.GetType() == typee.REC :
+                if self.currentnode.GetIdentifiant() == 0:
+                    j = self.currentnode.GetParentNode()
+                    if j.GetType() == typee.SEQUENCE or j.GetType() == typee.PARALLEL or j.GetType() == typee.CHOICE or j.GetType() == typee.REC:
+                        j.DecIdentifiant()
+                        self.currentnode = j
+                        self.tokenlist = self.tokenlist[1:]
+                        self.ParseProcess()
+                    else:
+                        self.currentnode = self.currentnode.GetParentNode()
+                        self.tokenlist = self.tokenlist[1:]
+                        self.ParseProcess()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"one and only process expected after rec")
+                    return 1
+            else :
+                j = self.currentnode.GetParentNode()
+                if j.GetType() == typee.SEQUENCE or j.GetType() == typee.PARALLEL or j.GetType() == typee.CHOICE or j.GetType() == typee.REC:
+                    j.DecIdentifiant()
+                    self.currentnode = j
+                    self.tokenlist = self.tokenlist[1:]
+                    self.ParseProcess()
+                else:
+                    self.currentnode = self.currentnode.GetParentNode()
+                    self.tokenlist = self.tokenlist[1:]
+                    self.ParseProcess()
+
+
+    def ParseBLeftComposition(self):
+        if self.bracketcounter == 0:
+            print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2], "Missing ( before )")
+            return 1
+        elif self.bracketcounter == 1:
+            self.bracketcounter = 0
+            if self.currentnode.GetIdentifiant() <= 0 :
+                j = self.currentnode.GetParentNode()
+                self.currentnode = j
+                self.tokenlist = self.tokenlist[1:]
+            else :
+                print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"at least two process are expected after Composition")
+                return 1
+        else:
+            self.bracketcounter -= 1
+            if self.currentnode.GetType() == typee.COMPOSITION :
+                if self.currentnode.GetIdentifiant() <= 0 :
+                    j = self.currentnode.GetParentNode()
+                    j.DecIdentifiant()
+                    self.currentnode = j
+                    self.tokenlist = self.tokenlist[1:]
+                    self.ParseProcess()
+                else :
+                    print("Syntax error at line", self.tokenlist[0][3], "at position", self.tokenlist[0][2],"at least two process are expected after Composition")
+                    return 1
+            else :
+                j = self.currentnode.GetParentNode()
+                j.DecIdentifiant()
+                self.currentnode = j
+                self.tokenlist = self.tokenlist[1:]
+                self.ParseComposition()
+
+
+    def ParseArithCompositionSpecial(self):
+        if self.tokenlist == [] :
+            print("syntax error , arith sentence was expected , model ended too soon ")
+            return 1
+        elif self.tokenlist[0][0] == token.BRACKETRIGHT:
+            self.ParseBrakcetRightArithSpecialCompostion()
+        else :
+            print("syntax error  , ( was expected at line ", self.tokenlist[3][0] , "colonne" , self.tokenlist[2][0])
+            return 1
+
+
+    def ParseArithComposition(self):
+        if self.tokenlist == [] :
+            print("syntax error , arith sentence was expected , model ended too soon ")
+            return 1
+        elif self.tokenlist[0][0] == token.BRACKETRIGHT:
+            self.ParseBracketRightArithComposition()
+        elif self.tokenlist[0][0] == token.BRACKETLEFT:
+            self.ParseBLeftArithComposition()
+        elif self.tokenlist[0][0] == token.INTEGER :
+            if self.bracketarithcounter == 0 :
+                node = AbstractSyntaxNode(typee.INTEGER ,[] , None , None , self.tokenlist[0][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+                self.nodecounterforgraphviz += 1
+                self.AddNodeToN( self.currentnodeforarith , node)
+                self.tokenlist = self.tokenlist[1:]
+                self.ParseComposition()
+            else :
+                node = AbstractSyntaxNode(typee.INTEGER, [], None, None, self.tokenlist[0][1], self.currentnodeforarith , self.nodecounterforgraphviz)
+                self.AddNodeToN(self.currentnodeforarith, node)
+                self.nodecounterforgraphviz += 1
+                self.tokenlist = self.tokenlist[1:]
+                self.ParseArithComposition()
+        else :
+            print("syntax error , ( or ) or integer was expected at line  " ,self.tokenlist[0][3] , "colonne" , self.tokenlist[0][2])
+            return 1
+
+    def ParseComposition(self):
+        if self.tokenlist == [] :
+            print( "syntax error , process action or process condition were expected here ")
+            return 1
+        elif self.tokenlist[0][0] == token.BRACKETRIGHT:
+            self.ParseBracketRightComposition()
+        elif self.tokenlist[0][0] == token.BRACKETLEFT:
+            self.ParseBLeftComposition()
+        else :
+            print("syntax error10 ( or ) were expected  , at line" , self.tokenlist[0][3] , "colonne" , self.tokenlist)
+            return 1
+
+    def ParseArith(self):
+        if self.tokenlist == [] :
+            print( "syntax error , arith expression was expected here ")
+            return 1
+        elif self.tokenlist[0][0] == token.BRACKETRIGHT:
+            self.ParseBrakcetRightArith()
+        elif self.tokenlist[0][0] == token.BRACKETLEFT:
+            self.ParseBLeftArith()
+        elif self.tokenlist[0][0] == token.INTEGER :
+            if self.bracketarithcounter == 0 :
+                node = AbstractSyntaxNode(typee.INTEGER ,[] , None , None , self.tokenlist[0][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+                self.AddNodeToN( self.currentnodeforarith , node)
+                self.tokenlist = self.tokenlist[1:]
+                self.nodecounterforgraphviz += 1
+                self.ParseProcess()
+            else :
+                node = AbstractSyntaxNode(typee.INTEGER, [], None, None, self.tokenlist[0][1], self.currentnodeforarith , self.nodecounterforgraphviz)
+                self.AddNodeToN(self.currentnodeforarith, node)
+                self.tokenlist = self.tokenlist[1:]
+                self.nodecounterforgraphviz += 1
+                self.ParseArith()
+        else :
+            print("syntax error , ( or ) or int was expected here at line  ", self.tokenlist[0][3] , "colonne" , self.tokenlist[0][2])
+            return 1
+
+    def ParseArithSpecial(self):
+        if self.tokenlist == []:
+            print("syntax error , (  was expected here  " )
+            return 1
+        elif self.tokenlist[0][0] == token.BRACKETRIGHT:
+            self.ParseBrakcetRightArithSpecial()
+        elif self.tokenlist[0][0] == token.BRACKETLEFT:
+            self.ParseBLeftArith()
+        else :
+            print("syntax error , ( or ) was expected at line" , self.tokenlist[0][3] , "colonne" , self.tokenlist[0][2])
+            return 1
+
+
+    def ParseArithTree(self):
+        if self.tokenlist[0][0] == token.BRACKETRIGHT:
+            self.ParseBrakcetRightArithTree()
+        elif self.tokenlist[0][0] == token.BRACKETLEFT:
+            self.ParseBLeftArithTree()
+        elif self.tokenlist[0][0] == token.INTEGER :
+            if self.bracketarithcounter == 0 :
+                node = AbstractSyntaxNode(typee.INTEGER ,[] , None , None , self.tokenlist[0][1] , self.currentnodeforarith , self.nodecounterforgraphviz)
+                self.AddNodeToN( self.currentnodeforarith , node)
+                self.tokenlist = self.tokenlist[1:]
+                self.nodecounterforgraphviz += 1
+                self.ParseTree()
+            else :
+                node = AbstractSyntaxNode(typee.INTEGER, [], None, None, self.tokenlist[0][1], self.currentnodeforarith , self.nodecounterforgraphviz)
+                self.AddNodeToN(self.currentnodeforarith, node)
+                self.tokenlist = self.tokenlist[1:]
+                self.nodecounterforgraphviz += 1
+                self.ParseArithTree()
+        else :
+            print("syntax error 10 , at line" , self.tokenlist[0][3] , "colonne" , self.tokenlist[0][2])
+            return 1
+
+    def ParseProcess(self):
+        if self.tokenlist == []:
+            print("syntax error , cannot parse an empty model , at least one process is needed   " )
+            return 1
+        elif self.tokenlist[0][0] == token.BRACKETRIGHT:
+            self.ParseBrakcetRightProcess()
+        elif self.tokenlist[0][0] == token.BRACKETLEFT:
+            self.ParseBLeftProcess()
+        else :
+            print("syntax error , ( or ) was expected at line   " , self.tokenlist[0][3] , "colonne" , self.tokenlist[0][2] )
+            return 1
+
+    def GetTree(self):
+        return self.tree
+
+    def PrintTree(self):
+        l = self.GetToRoot()
+
+    def ParseTotal(self):
+        if self.ParseTree() == 0 :
+            print("idiocracy)")
+            if (not self.tokenlist == []) :
+                if self.tokenlist[0][0] == token.PROCESS :
+                    self.tokenlist = self.tokenlist[1:]
+                    if (not self.tokenlist == []) :
+                        if self.tokenlist[0][0] == token.PIDENTIFIER:
+                            self.tokenlist = self.tokenlist[1:]
+                            if not self.ParseProcess() == 1 :
+                                if (not self.tokenlist == []) :
+                                    if self.tokenlist[0][0] == token.END :
+                                        self.tokenlist = self.tokenlist[1:]
+                                        while not self.tokenlist == []:
+                                            if self.tokenlist[0][0] == token.PROCESS:
+                                                self.tokenlist = self.tokenlist[1:]
+                                                if (not self.tokenlist == []) :
+                                                    if self.tokenlist[0][0] == token.PIDENTIFIER:
+                                                        self.tokenlist = self.tokenlist[1:]
+                                                        if not self.ParseProcess() == 1 :
+                                                            if (not self.tokenlist == []) :
+                                                                if self.tokenlist[0][0] == token.END:
+                                                                    self.tokenlist = self.tokenlist[1:]
+                                                                else :
+                                                                    print("syntax errror, end token  was exepected here at line  " , self.tokenlist[0][3] , "colonne" , self.tokenlist[0][2])
+                                                                    return 1
+                                                            else :
+                                                                print("syntax errror, end token  was exepected here at line  ",self.tokenlist[0][3], "colonne",self.tokenlist[0][2])
+                                                                return 1
+                                                        else :
+                                                            return 1
+                                                    else :
+                                                        print("syntax errror, Pidentifier token  was exepected here at line  ",self.tokenlist[0][3], "colonne", self.tokenlist[0][2])
+                                                        return 1
+                                                else:
+                                                    print("syntax errror, Pidentifier token  was exepected here at line  ",self.tokenlist[0][3], "colonne", self.tokenlist[0][2])
+                                                    return 1
+                                            else:
+                                                print("syntax errror, process token  was exepected here at line  ",self.tokenlist[0][3], "colonne", self.tokenlist[0][2])
+                                                return 1
+                                        return self.tree
+                                    else:
+                                        print("syntax errror, end token  was exepected here at line  ",self.tokenlist[0][3], "colonne", self.tokenlist[0][2])
+                                        return 1
+                                else:
+                                    print("syntax errror, end token  was exepected here at line  ",self.tokenlist[0][3], "colonne", self.tokenlist[0][2])
+                                    return 1
+                            else :
+                                return 1
+                        else:
+                            print("syntax errror, Pidentifier token  was exepected here at line  ",self.tokenlist[0][3], "colonne", self.tokenlist[0][2])
+                            return 1
+                    else:
+                        print("syntax errror, Pidentifier token  was exepected here at line  ", self.tokenlist[0][3],"colonne", self.tokenlist[0][2])
+                        return 1
+                else:
+                    print("syntax errror, process token  was exepected here at line  ", self.tokenlist[0][3], "colonne",self.tokenlist[0][2])
+                    return 1
+            else:
+                print("syntax errror, process token  was exepected here at line  ", self.tokenlist[0][3], "colonne",self.tokenlist[0][2])
+                return 1
+        else:
+            return 1
+
+
+
+
+    def Print(self , x):
+        file = open(x + ".gv" , "x")
+        root = self.GetToRoot()
+        k = root.GetListNodes()
+        l = root.GetListEdgesAndNodes()
+        file.write("digraph {  \n")
+        for a in k :
+            if a.GetType() == typee.INTEGER or a.GetType() == typee.BLOCKID or a.GetType()== typee.VARID  or a.GetType() == typee.BPATH or a.GetType() == typee.VPATH:
+                f = a.GetIdentifiant()
+                print(f , "XXXXXX" , a.GetType() )
+                file.write( "\"" + str(a.GetNumberForGraphviz()) + "." +  str(a.GetType()) + ","+ f + "\"" + "; \n" )
+            else :
+                file.write("\"" + str(a.GetNumberForGraphviz()) + "." +  str(a.GetType()) + "\"" + "; \n" )
+        for b in l:
+            i = b[0]
+            j = b[1]
+            if i.GetType() == typee.INTEGER or i.GetType() == typee.BLOCKID or i.GetType()== typee.VARID or i.GetType() == typee.BPATH or i.GetType() == typee.VPATH :
+                if j.GetType() == typee.INTEGER or j.GetType() == typee.BLOCKID or j.GetType() == typee.VARID or j.GetType() == typee.BPATH or j.GetType() == typee.VPATH :
+                    file.write("\""  + str(i.GetNumberForGraphviz()) + "." +  str(i.GetType()) + ","+ i.GetIdentifiant() + "\"" + "->" + "\"" +  str(j.GetNumberForGraphviz()) + "." +  str(j.GetType()) + ","+ j.GetIdentifiant() + "\"" + "; \n")
+                else :
+                    file.write("\"" + str(i.GetNumberForGraphviz()) + "." +  str(i.GetType()) + ","+ i.GetIdentifiant() + "\"" + "->" + "\"" + str(j.GetNumberForGraphviz()) + "." +  str(j.GetType()) + "\"" + "; \n")
+            else :
+                if j.GetType() == typee.INTEGER or j.GetType() == typee.BLOCKID or j.GetType() == typee.VARID or j.GetType() == typee.BPATH or j.GetType() == typee.VPATH  :
+                    file.write("\"" + str(i.GetNumberForGraphviz()) + "." +  str(i.GetType()) + "\""  + "->" + "\"" + str(j.GetNumberForGraphviz()) + "." +  str(j.GetType()) + ","+ j.GetIdentifiant() + "\"" + "; \n")
+                else :
+                    file.write("\"" + str(i.GetNumberForGraphviz()) + "." +  str(i.GetType()) + "\"" +  "->" + "\"" + str(j.GetNumberForGraphviz()) + "." +  str(j.GetType()) + "\"" + "; \n")
+        file.write("}")
+        file.close()
+
+
+
+
+
+
+
+
+
+
+
+
+file = open("yoyo", "r")
+tolo = lexer(file)
+l = tolo.TokenListfFile()
+k = Parse(l)
+print(k.ParseTotal())
+
+"""
+print(k.Print("136721345657656347")) 
+"""
