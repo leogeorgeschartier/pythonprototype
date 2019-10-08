@@ -1,0 +1,1102 @@
+from enum import Enum
+from parserag import *
+from random import randint
+from copy import deepcopy
+
+class node():
+
+    def __init__(self , identifier ):
+        self.identifier = identifier
+
+class Graph():
+
+    def __init__(self , listenodes , listeedges , initiallist , terminallist ):
+        self.listenodes = listenodes
+        self.listeedges = listeedges
+        self.initial = initiallist
+        self.terminal = terminallist
+
+    def GetListeNodes(self):
+        return self.listenodes
+
+    def GetListeEdges(self):
+        return self.listeedges
+
+    def GetInitial(self):
+        return self.initial
+
+    def GetTerminal(self):
+        return self.terminal
+
+    def PreviousNodes(self ,node):
+        l = []
+        for a in self.GetListeEdges():
+            if a[2] == node :
+                l += [(a[0] , a[1] ) ]
+                self.listenodes.remove(a[2])
+                self.listeedges.remove(a)
+        return  l
+
+    def PostNodes(self , node):
+        l = []
+        for a in self.GetListeEdges() :
+            if a[0] == node :
+                l += [( a[1] ,a[2]) ]
+                self.listenodes.remove(a[0])
+                self.listeedges.remove(a)
+        return l
+
+    def Rec(self):
+        l = []
+        for a in self.GetTerminal():
+            if not a in self.GetInitial() :
+                for x in self.PreviousNodes(a):
+                    for y in self.GetInitial() :
+                        l += [(x[0] , x[1] , y)]
+        self.listeedges += l
+        self.terminal = self.GetInitial()
+
+
+
+    def Plus(self , graph):
+        self.listeedges += graph.GetListeEdges()
+        self.listenodes += graph.GetListeNodes()
+        self.terminal += graph.GetListeTerminal()
+        self.initial += graph.GetInitial()
+
+
+    def Sequence(self , graph):
+        l = []
+        for a in self.GetTerminal() :
+            if not a in self.GetInitial() :
+                for b in self.PreviousNodes(a):
+                    for c in graph.GetListeInitial() :
+                        l += [(b[0] , b[1] , c )  ]
+                for b in self.PostNodes(a):
+                    for c in graph.GetListeInitial() :
+                        l += [ ( c, b[1] , b[0])]
+            else :
+                for b in self.PreviousNodes(a):
+                    for c in graph.GetListeInitial() :
+                        l += [(b[0] , b[1] , c )  ]
+                        self.initial += [c]
+                    self.initial.remove(a)
+                for b in self.PostNodes(a):
+                    for c in graph.GetListeInitial() :
+                        l += [ ( c, b[1] , b[0])]
+        self.listenodes += graph.GetListeNodes()
+        self.listeedges += l + graph.GetListeEdges()
+        self.terminal = graph.GetTerminal()
+
+
+    def SequenceClose(self , graph):
+        l = []
+        for a in graph.GetListeEdges():
+            for b in self.GetListeEdges() :
+                l = [(a[0] , a[1] + b[1] , a[2])]
+        self.listeedges += l
+
+    def EdgesPrivateFromInit(self):
+        l = []
+        a = self.GetInitial()
+        for a in self.GetListeEdges() :
+
+
+    def GetPostNodes(self ,node ):
+        l = []
+        for a in self.GetListeEdges() :
+            if a[2] == node :
+                l += [a]
+        return l
+
+
+
+    def GetNodeFromListe(self , couple , liste):
+        for a in liste :
+            if a[1] == couple :
+                return a[0]
+
+    def ReconstructGraph(self , node1 , l , listenode , liste  , n , h , graph , initliste , terminaliste ):
+        for b in l :
+            for c in self.GetPostNodes(b):
+                 if (node1  , b ) in liste :
+                     g = self.GetNodeFromListe( ( node1 , b ) , listenode)
+                     if (node1 , c[2] ) in liste :
+                         p = self.GetNodeFromListe( (node1 , c[2]) , listenode)
+                         listenode += [(g, (node1, c[2])) , ( p , (node1 , b))]
+                         liste += [(node1, c[2]) , (node1 , b )]
+                         h += [(g, c[1] , p )]
+                         h += self.ReconstructGraph(node1 , [c[2]] , listenode , liste ,  n , [] , graph , initliste , terminaliste)
+                     else :
+                         n += 1
+                         p = node(n)
+                         if node1 in self.GetInitial() and c[2] in graph.GetInitial() :
+                             initliste += [p]
+                             if node1 in self.GetTerminal() and c[2] in graph.GetTerminal() :
+                                 terminaliste += [p]
+                             else :
+                                 terminaliste = terminaliste
+                         else :
+                             if node1 in self.GetTerminal() and c[2] in graph.GetTerminal() :
+                                 terminaliste += [p]
+                             else :
+                                 terminaliste = terminaliste
+                         liste += [(node1 , c[2] )]
+                         listenode += [( p , ( node1 , c[2]))]
+                         h += [(g, c[1], p)]
+                         h += self.ReconstructGraph(node1, [c[2]], listenode, liste, n, [] , graph , initliste , terminaliste)
+                 else :
+                     if ( node1 , c[2]) in liste :
+                         p = self.GetNodeFromListe((node1, c[2]) , listenode)
+                         n += 1
+                         g = node(n)
+                         if node1 in self.GetInitial() and b in graph.GetInitial() :
+                             initliste += [g]
+                             if node1 in self.GetTerminal() and b in graph.GetTerminal() :
+                                 terminaliste += [g]
+                             else :
+                                 terminaliste = terminaliste
+                         else :
+                             if node1 in self.GetTerminal() and b in graph.GetTerminal() :
+                                 terminaliste += [g]
+                             else :
+                                 terminaliste = terminaliste
+                         listenode += [ (g, (node1, b))]
+                         liste += [(node1, b)]
+                         h += [(g, c[1], p)]
+                         h += self.ReconstructGraph(node1, [c[2]], listenode, liste, n, [] , graph , initliste , terminaliste )
+                     else :
+                         n += 1
+                         g = node(n)
+                         n += 1
+                         p = node(n)
+                         if node1 in self.GetInitial() and b in graph.GetInitial() :
+                             initliste += [g]
+                             if node1 in self.GetTerminal() and b in graph.GetTerminal() :
+                                 terminaliste += [g]
+                             else :
+                                 terminaliste = terminaliste
+                         else :
+                             if node1 in self.GetTerminal() and b in graph.GetTerminal() :
+                                 terminaliste += [g]
+                             else :
+                                 terminaliste = terminaliste
+                         if node1 in self.GetInitial() and c[2] in graph.GetInitial() :
+                             initliste += [p]
+                             if node1 in self.GetTerminal() and c[2] in graph.GetTerminal() :
+                                 terminaliste += [p]
+                             else :
+                                 terminaliste = terminaliste
+                         else :
+                             if node1 in self.GetTerminal() and c[2] in graph.GetTerminal() :
+                                 terminaliste += [p]
+                             else :
+                                 terminaliste = terminaliste
+                         listenode += [(g, (node1, b)) , ( p , ( node1 , c[2]))]
+                         liste += [(node1, b) , ( node1 , c[2])]
+                         h += [(g, c[1], p)]
+                         h += self.ReconstructGraph(node1, [c[2]], listenode, liste, n, [] , graph , initliste , terminaliste)
+        return h
+
+
+    def AddNode(self , node):
+        self.listenodes += [ node]
+
+
+    def AddEdge(self , edge):
+        self.listeedges += [ edge]
+
+    def AddListNode(self , listnodes):
+        self.listenodes += listnodes
+
+    def AddListEdge(self , listedges):
+        self.listeedges += listedges
+
+
+
+
+
+
+    def Parallel(self   , graph):
+        n =  0
+        listenode = []
+        liste = []
+        h = []
+        initliste = []
+        terminaliste = []
+        OutPutGraph = graph([], [] , [] , [])
+        for a in self.GetListeEdges() :
+            for b in graph.GetListeEdges() :
+                if ( a[0] , b [0]) in liste :
+                    g = self.GetNodeFromListe( ( a[0] , b[0]) , listenode)
+                    if ( a[2] , b[0]) in liste :
+                        d = self.GetNodeFromListe( ( a[2] , b[0]) , listenode)
+                        if ( a[2] , b[2]) in liste :
+                            j = self.GetNodeFromListe( ( a[2] , b [2]) , listenode)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            h += self.ReconstructGraph(a[2] , [b[2]] , listenode , liste , [] , n , graph ,initliste , terminaliste )
+                        else :
+                            n += 1
+                            j = node(n)
+                            if a[2] in self.GetInitial() and b[2] in graph.GetInitial():
+                                initliste += [j]
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            h += [(g, a[1] ,d )]
+                            h += [(d , b[1], j)]
+                            listenode += [(a[2], b[2])]
+                            liste += [(j, (a[2], b[2]))]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                    else :
+                        if (a[2], b[2]) in liste:
+                            n += 1
+                            d = node(n)
+                            if a[2] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [d]
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(d)
+                            j = self.GetNodeFromListe((a[2], b[2]), listenode)
+                            h += [(g,  a[1], d)]
+                            h += [(d, b[1], j )]
+                            listenode += [(d , (a[2], b[0]))]
+                            liste += [(a[2], b[0]) ]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                        else :
+                            n += 1
+                            j = node(n)
+                            if a[2] in self.GetInitial() and b[2] in graph.GetInitial():
+                                initliste += [j]
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            n += 1
+                            d = node(n)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(d, (a[2], b[0])) , ( j , ( a[2] , b[2]))]
+                            liste += [(a[2], b[0]) , (a[2] , b[2])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                else :
+                    if ( a[2] , b[2]) in liste :
+                        j = self.GetNodeFromListe((a[2], b[2]), listenode)
+                        if ( a[2] , b[0]) in liste :
+                            d = self.GetNodeFromListe((a[2] , b[0]) , listenode )
+                            n += 1
+                            g = node(n)
+                            if a[0] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [g]
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(g , (a[0], b[0]))]
+                            liste += [(a[0], b[0])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste,terminaliste)
+                        else :
+                            n += 1
+                            g = node(n)
+                            if a[0] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [g]
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            n+= 1
+                            d = node(n)
+                            if a[2] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [d]
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(d)
+                            h += [(g, a[1], d )]
+                            h += [(d, b[1], j)]
+                            listenode += [(g, (a[0], b[0])) , (d, (a[2], b[0]))]
+                            liste += [(a[0], b[0]) , (a[2], b[0]) ]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                    else :
+                        if (a[2], b[0]) in liste:
+                            d = self.GetNodeFromListe((a[2], b[0]), listenode)
+                            n += 1
+                            g = node(n)
+                            if a[0] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [g]
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            n += 1
+                            j = node(n)
+                            if a[2] in self.GetInitial() and b[2] in graph.GetInitial():
+                                initliste += [j]
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(g, (a[0], b[0])) ,(j , (a[2] , b[2]))]
+                            liste += [(a[0], b[0]) , (a[2] , b[2])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                        else :
+                            n += 1
+                            d = node(n)
+                            if a[2] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [d]
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(d)
+                            n += 1
+                            g = node(n)
+                            if a[0] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [g]
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            n += 1
+                            j = node(n)
+                            if a[2] in self.GetInitial() and b[2] in graph.GetInitial():
+                                initliste += [j]
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(g, (a[0], b[0])), (j, (a[2], b[2])) , ( d , (a[2] , b[0] ) )]
+                            liste += [(a[0], b[0]), (a[2], b[2]) , (a[2] , b[0])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+        for a in graph.GetListeEdges() :
+            for b in self.GetListeEdges() :
+                if ( a[0] , b [0]) in liste :
+                    g = self.GetNodeFromListe( ( a[0] , b[0]) , listenode)
+                    if ( a[2] , b[0]) in liste :
+                        d = self.GetNodeFromListe( ( a[2] , b[0]) , listenode)
+                        if ( a[2] , b[2]) in liste :
+                            j = self.GetNodeFromListe( ( a[2] , b [2]) , listenode)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            h += self.ReconstructGraph(a[2] , [b[2]] , listenode , liste , [] , n , graph ,initliste , terminaliste )
+                        else :
+                            n += 1
+                            j = node(n)
+                            if a[2] in graph.GetInitial() and b[2] in self.GetInitial():
+                                initliste += [j]
+                                if a[2] in graph.GetTerminal() and b[2] in self.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in graph.GetTerminal() and b[2] in self.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            h += [(g, a[1] ,d )]
+                            h += [(d , b[1], j)]
+                            listenode += [(a[2], b[2])]
+                            liste += [(j, (a[2], b[2]))]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                    else :
+                        if (a[2], b[2]) in liste:
+                            n += 1
+                            d = node(n)
+                            if a[2] in graph.GetInitial() and b[0] in self.GetInitial():
+                                initliste += [d]
+                                if a[2] in graph.GetTerminal() and b[0] in self.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in graph.GetTerminal() and b[0] in self.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(d)
+                            j = self.GetNodeFromListe((a[2], b[2]), listenode)
+                            h += [(g,  a[1], d)]
+                            h += [(d, b[1], j )]
+                            listenode += [(d , (a[2], b[0]))]
+                            liste += [(a[2], b[0]) ]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                        else :
+                            n += 1
+                            j = node(n)
+                            if a[2] in graph.GetInitial() and b[2] in self.GetInitial():
+                                initliste += [j]
+                                if a[2] in graph.GetTerminal() and b[2] in self.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in graph.GetTerminal() and b[2] in self.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            n += 1
+                            d = node(n)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(d, (a[2], b[0])) , ( j , ( a[2] , b[2]))]
+                            liste += [(a[2], b[0]) , (a[2] , b[2])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                else :
+                    if ( a[2] , b[2]) in liste :
+                        j = self.GetNodeFromListe((a[2], b[2]), listenode)
+                        if ( a[2] , b[0]) in liste :
+                            d = self.GetNodeFromListe((a[2] , b[0]) , listenode )
+                            n += 1
+                            g = node(n)
+                            if a[0] in graph.GetInitial() and b[0] in self.GetInitial():
+                                initliste += [g]
+                                if a[0] in graph.GetTerminal() and b[0] in self.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in graph.GetTerminal() and b[0] in self\
+                                .GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(g , (a[0], b[0]))]
+                            liste += [(a[0], b[0])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste,terminaliste)
+                        else :
+                            n += 1
+                            g = node(n)
+                            if a[0] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [g]
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            n+= 1
+                            d = node(n)
+                            if a[2] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [d]
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(d)
+                            h += [(g, a[1], d )]
+                            h += [(d, b[1], j)]
+                            listenode += [(g, (a[0], b[0])) , (d, (a[2], b[0]))]
+                            liste += [(a[0], b[0]) , (a[2], b[0]) ]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                    else :
+                        if (a[2], b[0]) in liste:
+                            d = self.GetNodeFromListe((a[2], b[0]), listenode)
+                            n += 1
+                            g = node(n)
+                            if a[0] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [g]
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            n += 1
+                            j = node(n)
+                            if a[2] in self.GetInitial() and b[2] in graph.GetInitial():
+                                initliste += [j]
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(g, (a[0], b[0])) ,(j , (a[2] , b[2]))]
+                            liste += [(a[0], b[0]) , (a[2] , b[2])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+                        else :
+                            n += 1
+                            d = node(n)
+                            if a[2] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [d]
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [d]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(d)
+                            n += 1
+                            g = node(n)
+                            if a[0] in self.GetInitial() and b[0] in graph.GetInitial():
+                                initliste += [g]
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[0] in self.GetTerminal() and b[0] in graph.GetTerminal():
+                                    terminaliste += [g]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(g)
+                            n += 1
+                            j = node(n)
+                            if a[2] in self.GetInitial() and b[2] in graph.GetInitial():
+                                initliste += [j]
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            else:
+                                if a[2] in self.GetTerminal() and b[2] in graph.GetTerminal():
+                                    terminaliste += [j]
+                                else:
+                                    terminaliste = terminaliste
+                            OutPutGraph.AddNode(j)
+                            h += [(g, a[1], d)]
+                            h += [(d, b[1], j)]
+                            listenode += [(g, (a[0], b[0])), (j, (a[2], b[2])) , ( d , (a[2] , b[0] ) )]
+                            liste += [(a[0], b[0]), (a[2], b[2]) , (a[2] , b[0])]
+                            h += self.ReconstructGraph(a[2], [b[2]], listenode, liste, [], n, graph, initliste, terminaliste)
+
+    def AddInitNode(self , node):
+        self.initial += [node]
+
+    def AddTerminal(self , node):
+        self.terminal += [node]
+
+    def GeneralAddFunctionToGraph(self , listefunction):
+        for a in listefunction:
+            for b in self.listeedges :
+                b[1] += [a]
+
+    def GetEdgesFromNode(self , node):
+        l = []
+        for a in self.listeedges :
+            if a[0] == node :
+                l+= [a]
+
+
+    def PrintGraphviz(self , x):
+        file = open(x + ".gv", "x")
+        file.write("digraph {  \n")
+        for a in self.GetListeNodes() :
+            if (not a in self.GetInitial()) and (not a in self.GetTerminal()):
+                file.write(str(a) + "; \n")
+            else :
+                if (a in self.GetInitial()) and (not a in self.GetTerminal()) :
+                    file.write( str(a) + "Initial" + "; \n" )
+                else :
+                    if (a in self.GetTerminal()) and (not a in self.GetInitial()) :
+                        file.write( str(a) + "Terminal" + "; \n")
+                    else :
+                        file.write(str(a) + "Initial" + "Terminal" + "; \n")
+        for b in self.listeedges() :
+            if (not b[0] in self.GetInitial()) and (not b[1] in self.GetInitial()) and (not b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) + "->" + str(b[1]) + "; \n")
+            elif (b[0] in self.GetInitial()) and (not b[1] in self.GetInitial()) and (not b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()):
+                file.write(str(b[0]) + "Initial" + "->" + str(b[1]) + "; \n")
+            elif (b[0] in self.GetInitial()) and ( b[1] in self.GetInitial()) and (not b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()):
+                file.write(str(b[0]) + "Initial" + "->" + str(b[1]) + "Initial" +  "; \n")
+            elif (b[0] in self.GetInitial()) and ( b[1] in self.GetInitial()) and ( b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) + "InitialTerminal" + "->" + str(b[1]) + "Initial" + "; \n")
+            elif (b[0] in self.GetInitial()) and ( b[1] in self.GetInitial()) and ( b[0] in self.GetTerminal()) and ( b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) + "InitialTerminal" + "->" + str(b[1]) + "InitialTerminal" + "; \n")
+            elif (not b[0] in self.GetInitial()) and ( b[1] in self.GetInitial()) and ( b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) + "Terminal" + "->" + str(b[1]) + "InitialTerminal" + "; \n")
+            elif (not b[0] in self.GetInitial()) and ( not b[1] in self.GetInitial()) and ( b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) + "Terminal" + "->" + str(b[1]) + "Terminal" + "; \n")
+            elif (not b[0] in self.GetInitial()) and ( not b[1] in self.GetInitial()) and ( not b[0] in self.GetTerminal()) and (b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) +  "->" + str(b[1]) + "Terminal" + "; \n")
+            elif (b[0] in self.GetInitial()) and (not b[1] in self.GetInitial()) and ( b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()):
+                file.write(str(b[0]) + "InitialTerminal" + "->" + str(b[1]) +  "; \n")
+            elif (not b[0] in self.GetInitial()) and (  b[1] in self.GetInitial()) and ( not  b[0] in self.GetTerminal()) and (not b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) +  "->" + str(b[1]) + "Initial" + "; \n")
+            elif (not b[0] in self.GetInitial()) and (  b[1] in self.GetInitial()) and ( not  b[0] in self.GetTerminal()) and ( b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) +  "->" + str(b[1]) + "InitialTerminal" + "; \n")
+            elif ( b[0] in self.GetInitial()) and (  b[1] in self.GetInitial()) and ( not  b[0] in self.GetTerminal()) and ( b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) + "Initial" + "->" + str(b[1]) + "InitialTerminal" + "; \n")
+            elif ( b[0] in self.GetInitial()) and ( not   b[1] in self.GetInitial()) and ( not  b[0] in self.GetTerminal()) and ( b[1] in self.GetTerminal()) :
+                file.write(str(b[0]) + "Initial" + "->" + str(b[1]) + "Terminal" + "; \n")
+        file.write("}")
+
+
+graph = Graph()
+
+
+
+
+class Functoken(Enum):
+    SEND = 1
+    MOVE = 2
+    DEL = 3
+    ASSIGN = 4
+    ADD = 5
+    MINUS = 6
+    TIMES = 7
+    DIV = 8
+    MOD = 9
+    GETVAL = 10
+    SUP = 11
+    SUPEQ = 12
+    INF = 13
+    INFEQ = 14
+    EQ = 15
+    INTEGER = 16
+
+
+
+class Function():
+
+    def __init__(self):
+        self.content = []
+
+    def MakeSendFunction(self , path1 , path2):
+        self.content = [Functoken.SEND , path1 , path2]
+
+    def MakeMoveFunction(self , path1 , path2):
+        self.content = [Functoken.MOVE , path1 , path2]
+
+    def MakeDelFunction(self , path1):
+        self.content = [Functoken.DEL , path1 ]
+
+    def MakeAssignFunction(self , path1 , function):
+        self.content = [Functoken.ASSIGN , path1 , function]
+
+    def MakePlusFunction(self , listefunction):
+        self.content = [Functoken.PLUS , listefunction]
+
+    def MakeMinusFunction(self , function1 , function2):
+        self.content = [Functoken.MINUS , function1 , function2]
+
+    def MakeDivFunction(self , function1 , function2):
+        self.content = [Functoken.DIV , function1 , function2]
+
+    def MakeTimesFunction(self , listefunction):
+        self.content = [Functoken.TIMES , listefunction]
+
+    def MakeSupFunction(self , function1 , function2):
+        self.content = [Functoken.SUP , function1 , function2]
+
+    def MakeSupEqFunction(self , function1 , function2):
+        self.content = [Functoken.SUPEQ , function1 , function2]
+
+    def MakeInfFunction(self , function1 , function2):
+        self.content = [Functoken.INF , function1 , function2]
+
+    def MakeInfEqFunction(self , function1 , function2):
+        self.content = [Functoken.INFEQ , function1 , function2]
+
+
+    def MakeEqFucntion(self , function1 , function2):
+        self.content = [Functoken.EQ , function1 , function2]
+
+
+    def MakeModFunction(self , function1 , function2):
+        self.content = [Functoken.MOD , function1 , function2]
+
+
+    def MakeIntegerFucntion(self , integer):
+        self.content = [Functoken.INTEGER , integer]
+
+    def MakeGetEval(self , path):
+        self.content = [Functoken.GETVAL , path ]
+
+    def ApplyFunction(self , tree):
+        if self.content[0] == Functoken.GETVAL :
+            return tree.GetValueFromPath( self.content[1])
+        elif self.content[0] == Functoken.PLUS :
+            x = 0
+            for a in self.content[1:] :
+                x += a.ApplyFunction(tree)
+            return x
+        elif self.content[0] == Functoken.MINUS:
+            return self.content[1].ApplyFunction(tree) - self.content[2].ApplyFunction(tree)
+        elif self.content[0] == Functoken.TIMES :
+            x = 0
+            for a in self.content[1:]:
+                x *= a.ApplyFunction(tree)
+            return x
+        elif self.content[0] == Functoken.DIV :
+            return self.content[1].ApplyFunction(tree)  / self.content[2].ApplyFunction(tree)
+        elif self.content[0] == Functoken.MOD :
+            return self.content[1].ApplyFunction(tree)  % self.content[2].ApplyFunction(tree)
+        elif self.content[0] == Functoken.SEND :
+            return tree.send(self.content[1] , self.content[2])
+        elif self.content[0] == Functoken.MOVE:
+            return tree.move(self.content[1], self.content[2])
+        elif self.content[0] == Functoken.DEL :
+            return tree.Del(self.content[1])
+        elif self.content[0] == Functoken.EQ :
+            if self.content[1].ApplyFunction(tree) == self.content[2].ApplyFunction(tree) :
+                return 1
+            else :
+                return 0
+        elif self.content[0] == Functoken.SUP :
+            if self.content[1].ApplyFunction(tree) > self.content[2].ApplyFunction(tree) :
+                return 1
+            else :
+                return 0
+        elif self.content[0] == Functoken.SUPEQ :
+            if self.content[1].ApplyFunction(tree) >= self.content[2].ApplyFunction(tree) :
+                return 1
+            else :
+                return 0
+        elif self.content[0] == Functoken.INF :
+            if self.content[1].ApplyFunction(tree) < self.content[2].ApplyFunction(tree) :
+                return 1
+            else :
+                return 0
+        elif self.content[0] == Functoken.INFEQ :
+            if self.content[1].ApplyFunction(tree) <= self.content[2].ApplyFunction(tree) :
+                return 1
+            else :
+                return 0
+        elif self.content[0] == Functoken.INTEGER :
+            return self.content[1]
+        elif self.content[0] == Functoken.ASSIGN :
+            x = tree.GetNodeFromPath(self.content[1])
+            x.SetId( self.content[2].ApplyFunction(tree))
+        else :
+            return None
+
+
+
+
+
+def GetFunctionsFromTree( tree ):
+    l = []
+    for x in tree.GetArithNodeFromTree() :
+        y = x.GetChildren()[0]
+        f = TransfoArithFunction([y] , [])
+        l += [f]
+        parent_node_x = x.GetParentNode()
+        parent_node_x.Remove(x)
+    return l
+
+def AddFunctionsFromTreeToGraph( graph , tree):
+    l = GetFunctionsFromTree(tree)
+    graph.GeneralAddFunctionToGraph(l)
+
+def TransfoArithFunction(l , k):
+    for  x in l :
+        if x.GetType() == typee.ADD :
+            function = Function()
+            function.MakePlusFunction( TransfoArithFunction(x.GetChildren() , []  ) )
+            k += [function]
+        elif x.GetType() == typee.TIMES :
+            function = Function()
+            function.MakeTimesFunction(TransfoArithFunction(x.GetChildren() , []  ))
+            k += [function]
+        elif x.GetType() == typee.MINUS :
+            function = Function()
+            function.MakeMinusFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.DIV :
+            function = Function()
+            function.MakeDivFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.MOD :
+            function = Function()
+            function.MakeModFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.SUP :
+            function = Function()
+            function.MakeSupFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.SUPEQ :
+            function = Function()
+            function.MakeSupFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.INF :
+            function = Function()
+            function.MakeSupFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.INFEQ :
+            function = Function()
+            function.MakeSupFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.INFEQ :
+            function = Function()
+            function.MakeSupFunction(TransfoArithFunction([x.GetChildren()[0]] , [] ) , TransfoArithFunction([x.GetChildren()[1]] , []))
+            k += [function]
+        elif x.GetType() == typee.INTEGER :
+            function = Function()
+            function.MakeIntegerFucntion(int(x.GetIdentifiant()))
+            k += [function]
+        elif x.GetType() == typee.GETVAL :
+            function = Function()
+            function.MakeGetEval(x.GetChildren()[0].GetIdentifiant())
+            k+= Function()
+    return k
+
+
+
+def AssignTransfo(x) :
+    function = Function()
+    y = x.GetChildren()[0]
+    u = y.GetChildren()[0].GetChildren()[0]
+    f = TransfoArithFunction([u] , [])
+    function.MakeAssignFunction(y ,f)
+    return function
+
+
+def GetSend(x) :
+    function = Function()
+    y = x.GetChildren()[0]
+    u = y.GetChildren()[0]
+    function.MakeSendFunction( y , u)
+    return function
+
+def GetMove(x) :
+    function = Function()
+    y = x.GetChildren()[0]
+    u = y.GetChildren()[0]
+    function.MakeMoveFunction( y , u)
+    return function
+
+def GetDel(x) :
+    function = Function()
+    y = x.GetChildren()[0]
+    function.MakeDelFunction( y )
+    return function
+
+
+
+def FunctionTransformation(x):
+    if x.GetType() == typee.SEND :
+        return GetSend(x)
+    elif x.GetType() == typee.MOVE :
+        return GetMove(x)
+    elif x.GetType() == typee.DEL :
+        return GetDel(x)
+    elif x.GetType() == typee.ASSIGN :
+        return AssignTransfo(x)
+    else :
+        return None
+
+
+
+
+
+def TransfoTreeInGraph(x , n):
+    graph = Graph([] , [] , [] , [])
+    if x.GetType() == typee.PARALLEL :
+        for a in x.GetChildren():
+            graph.Parallel(TransfoTreeInGraph(a , n ))
+        return graph
+    elif x.GetType() == typee.SEQUENCE :
+        for a in x.GetChildren() :
+            graph.Sequence(TransfoTreeInGraph(a , n ))
+        return graph
+    elif x.GetType() == typee.PLUS :
+        for a in x.GetChildren() :
+            graph.Plus(TransfoTreeInGraph(a , n ))
+        return graph
+    elif x.GetType() == typee.SEQUENCEClOSE :
+        for a in x.GetChildren() :
+            graph.SequenceClose(TransfoTreeInGraph(a , n))
+        return graph
+    elif x.GetType() == typee.REC :
+        for a in x.GetChildren():
+            graph.Rec(TransfoTreeInGraph(a , n))
+        return graph
+    elif x.GetType() == typpe.ACTION :
+        y = x.GetChildren()[0]
+        f = FunctionTransformation(y)
+        j = node(n)
+        n += 1
+        graph.AddNode(j)
+        graph.AddInitNode(j)
+        h = node(n)
+        n+= 1
+        graph.AddNode(h)
+        graph.AddTerminal(h)
+        graph.AddEdge((j , f , h))
+        return graph
+    elif x.GetType() == typee.CONDITION :
+        f = ConditionTransformation(x)
+        j = node(n)
+        n += 1
+        graph.AddNode(j)
+        graph.AddInitNode(j)
+        h = node(n)
+        n += 1
+        graph.AddNode(h)
+        graph.AddTerminal(h)
+        graph.AddEdge((j, f, h))
+        return graph
+    else :
+        return None
+
+
+
+
+class Execution() :
+
+    def __init__(self , graph , tree):
+        self.graph = graph
+        self.currentnode = None
+        self.tree = tree
+        self.previoussituation = []
+
+    def GetGraph(self):
+        return self.graph
+
+    def GetTree(self):
+        return self.GetTree()
+
+    def GetCurrentNode(self):
+        return self.currentnode
+
+
+    def SetCurrentNode(self , node ):
+        self.currentnode = node
+
+    def PossibleEdges(self):
+        return self.GetGraph().GetEdgesFromNode(self.GetCurrentNode())
+
+
+    def Next(self , i):
+        self.previoussituation += deepcopy(self)
+        a = self.PossibleEdges()[i]
+        listefunction = a[1]
+        tree = self.GetTree()
+        for f in listefunction:
+            f.ApplyFunction(tree)
+        self.SetCurrentNode(a[2])
+
+    def Back(self):
+        return self.previoussituation[-1]
+
+
+    def NextOrBackAndNext(self , i):
+        self.previoussituation += deepcopy(self)
+        l = self.PossibleEdges()
+
+
+    def AuxRandomExploration(self , i):
+        l = self.PossibleEdges()
+        n = len(l)
+        while (not i == 0):
+            j = randint(0 , n )
+            self.Next(j)
+            i -= 1
+
+    def RandomExploration(self):
+
+
+
+    def DeepthLeftExploration(self ,i):
+        l = self.PossibleEdges()
+        while (not i == 0):
+            self.Next(0)
+            i -= 1
+
+    def DeepthRightExploration(self ,i):
+        l = self.PossibleEdges()
+        while (not i == 0):
+            self.Next(-1)
+            i -= 1
