@@ -44,9 +44,6 @@ class Orelation(Enum):
     TRONC = 17
 
 
-
-
-
 class Formulatomique():
 
     def __init__(self ):
@@ -343,7 +340,7 @@ class Formulatomique():
 
 
 
-
+d = 2 
 
 
 class Nodes():
