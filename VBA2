@@ -1,0 +1,227 @@
+''
+    'W38 to AH38
+    '
+    mavarboucle2 = 23
+    Do While mavarboucle2 <= 33
+      If Len(Cells(53, mavarboucle2)) <= 2 Then
+         If Cells(53, mavarboucle2) = numerodechambre Then
+            Cells(33, mavarboucle2) = nomdeloccupant
+            mavarboucle2 = 17
+         Else
+            mavarboucle2 = mavarboucle2 + 1
+         End If
+      Else
+         If Mid(Cells(53, mavarboucle2), 1, 3) = numerodechambre Then
+            Cells(30, mavarboucle2) = nomdeloccupant
+            mavarboucle2 = 17
+         Else
+            If Mid(Cells(32, mavarboucle2), Len(Cells(mavarboucle, 16)) - 2, 3) = numerodechambre Then
+               Cells(33, mavarboucle2) = nomdeloccupant
+               mavarboucle2 = 17
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    'BROCARD
+    'J2 to J15, J17 to J28,J30 to J41, D8 to D21, D23 to D34, D36 to D47, G50 to R50,M44 to X44
+    '
+    'J2 to J15
+    Sheets("BROCARD").Activate
+    mavarboucle2 = 39
+    Do While mavarboucle2 <= 50
+      If Len(Cells(mavarboucle2, 36)) <= 2 Then
+         If Cells(mavarboucle2, 36) = numerodechambre Then
+            Cells(mavarboucle2, 34) = nomdeloccupant
+            mavarboucle2 = 51
+         Else
+            If Cells(mavarboucle2, 7) = numerodechambre Then
+               Cells(mavarboucle2, 14) = nomdeloccupant
+               mavarboucle2 = 51
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         End If
+      Else
+         If Mid(Cells(mavarboucle, 36), 1, 3) = numerodechambre Then
+            Cells(mavarboucle2, 14) = nomdeloccupant
+            mavarboucle2 = 45
+         Else
+            If Mid(Cells(mavarboucle, 36), Len(Cells(mavarboucle, 36)) - 2, 3) = numerodechambre Then
+               Cells(mavarboucle2, 17) = nomdeloccupant
+               mavarboucle2 = 45
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    '
+    'J17 to J28
+    '
+    mavarboucle2 = 39
+    Do While mavarboucle2 <= 50
+      If Len(Cells(mavarboucle2, 36)) <= 2 Then
+         If Cells(mavarboucle2, 36) = numerodechambre Then
+            Cells(mavarboucle2, 34) = nomdeloccupant
+            mavarboucle2 = 51
+         Else
+            If Cells(mavarboucle2, 7) = numerodechambre Then
+               Cells(mavarboucle2, 14) = nomdeloccupant
+               mavarboucle2 = 51
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         End If
+      Else
+         If Mid(Cells(mavarboucle, 36), 1, 3) = numerodechambre Then
+            Cells(mavarboucle2, 14) = nomdeloccupant
+            mavarboucle2 = 45
+         Else
+            If Mid(Cells(mavarboucle, 36), Len(Cells(mavarboucle, 36)) - 2, 3) = numerodechambre Then
+               Cells(mavarboucle2, 17) = nomdeloccupant
+               mavarboucle2 = 45
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    '
+    'J30 to J41
+    '
+    Do While mavarboucle2 <= 50
+      If Len(Cells(mavarboucle2, 36)) <= 2 Then
+         If Cells(mavarboucle2, 36) = numerodechambre Then
+            Cells(mavarboucle2, 34) = nomdeloccupant
+            mavarboucle2 = 51
+         Else
+            If Cells(mavarboucle2, 7) = numerodechambre Then
+               Cells(mavarboucle2, 14) = nomdeloccupant
+               mavarboucle2 = 51
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         End If
+      Else
+         If Mid(Cells(mavarboucle, 36), 1, 3) = numerodechambre Then
+            Cells(mavarboucle2, 14) = nomdeloccupant
+            mavarboucle2 = 45
+         Else
+            If Mid(Cells(mavarboucle, 36), Len(Cells(mavarboucle, 36)) - 2, 3) = numerodechambre Then
+               Cells(mavarboucle2, 17) = nomdeloccupant
+               mavarboucle2 = 45
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    '
+    'D8 to D21
+    '
+    Do While mavarboucle2 <= 50
+      If Len(Cells(mavarboucle2, 36)) <= 2 Then
+         If Cells(mavarboucle2, 36) = numerodechambre Then
+            Cells(mavarboucle2, 34) = nomdeloccupant
+            mavarboucle2 = 51
+         Else
+            If Cells(mavarboucle2, 7) = numerodechambre Then
+               Cells(mavarboucle2, 14) = nomdeloccupant
+               mavarboucle2 = 51
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         End If
+      Else
+         If Mid(Cells(mavarboucle, 36), 1, 3) = numerodechambre Then
+            Cells(mavarboucle2, 14) = nomdeloccupant
+            mavarboucle2 = 45
+         Else
+            If Mid(Cells(mavarboucle, 36), Len(Cells(mavarboucle, 36)) - 2, 3) = numerodechambre Then
+               Cells(mavarboucle2, 17) = nomdeloccupant
+               mavarboucle2 = 45
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    '
+    'D23 to D34
+    '
+    Do While mavarboucle2 <= 50
+      If Len(Cells(mavarboucle2, 36)) <= 2 Then
+         If Cells(mavarboucle2, 36) = numerodechambre Then
+            Cells(mavarboucle2, 34) = nomdeloccupant
+            mavarboucle2 = 51
+         Else
+            If Cells(mavarboucle2, 7) = numerodechambre Then
+               Cells(mavarboucle2, 14) = nomdeloccupant
+               mavarboucle2 = 51
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         End If
+      Else
+         If Mid(Cells(mavarboucle, 36), 1, 3) = numerodechambre Then
+            Cells(mavarboucle2, 14) = nomdeloccupant
+            mavarboucle2 = 45
+         Else
+            If Mid(Cells(mavarboucle, 36), Len(Cells(mavarboucle, 36)) - 2, 3) = numerodechambre Then
+               Cells(mavarboucle2, 17) = nomdeloccupant
+               mavarboucle2 = 45
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    '
+    'D36 to D47
+    '
+    Do While mavarboucle2 <= 50
+      If Len(Cells(mavarboucle2, 36)) <= 2 Then
+         If Cells(mavarboucle2, 36) = numerodechambre Then
+            Cells(mavarboucle2, 34) = nomdeloccupant
+            mavarboucle2 = 51
+         Else
+            If Cells(mavarboucle2, 7) = numerodechambre Then
+               Cells(mavarboucle2, 14) = nomdeloccupant
+               mavarboucle2 = 51
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         End If
+      Else
+         If Mid(Cells(mavarboucle, 36), 1, 3) = numerodechambre Then
+            Cells(mavarboucle2, 14) = nomdeloccupant
+            mavarboucle2 = 45
+         Else
+            If Mid(Cells(mavarboucle, 36), Len(Cells(mavarboucle, 36)) - 2, 3) = numerodechambre Then
+               Cells(mavarboucle2, 17) = nomdeloccupant
+               mavarboucle2 = 45
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    '
+    'G50 to R50
+    '
+    mavarboucle2 = 23
+    Do While mavarboucle2 <= 33
+      If Len(Cells(53, mavarboucle2)) <= 2 Then
+         If Cells(53, mavarboucle2) = numerodechambre Then
+            Cells(33, mavarboucle2) = nomdeloccupant
+            mavarboucle2 = 17
+         Else
+            mavarboucle2 = mavarboucle2 + 1
+         End If
+      Else
+         If Mid(Cells(53, mavarboucle2), 1, 3) = numerodechambre Then
+            Cells(30, mavarboucle2) = nomdeloccupant
+            mavarboucle2 = 17
+         Else
+            If Mid(Cells(32, mavarboucle2), Len(Cells(mavarboucle, 16)) - 2, 3) = numerodechambre Then
+               Cells(33, mavarboucle2) = nomdeloccupant
+               mavarboucle2 = 17
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    '
+    'M44 to X44
+    '
+    mavarboucle2 = 23
+    Do While mavarboucle2 <= 33
+      If Len(Cells(53, mavarboucle2)) <= 2 Then
+         If Cells(53, mavarboucle2) = numerodechambre Then
+            Cells(33, mavarboucle2) = nomdeloccupant
+            mavarboucle2 = 17
+         Else
+            mavarboucle2 = mavarboucle2 + 1
+         End If
+      Else
+         If Mid(Cells(53, mavarboucle2), 1, 3) = numerodechambre Then
+            Cells(30, mavarboucle2) = nomdeloccupant
+            mavarboucle2 = 17
+         Else
+            If Mid(Cells(32, mavarboucle2), Len(Cells(mavarboucle, 16)) - 2, 3) = numerodechambre Then
+               Cells(33, mavarboucle2) = nomdeloccupant
+               mavarboucle2 = 17
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+    mavarboucle1 = mavarboucle1 + 1
