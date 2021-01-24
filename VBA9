@@ -1,0 +1,733 @@
+Sub Macro2()
+'
+'Actualisation liste Eleve/Chambre --> Plan Testart/Brocard
+'
+
+Dim mavarboucle1 As Integer
+Dim mavarboucle2 As Integer
+Dim numerodechambre As Integer
+Dim nomdeloccupant As String
+Dim numerobrigade As String
+Dim variableauxiliaire As String
+Dim testartorbrocard As String
+Dim coleurbrigade As Long
+
+
+mavarboucle1 = 4
+nomdeloccupant = "JackSparrow"
+mavarboucle2 = 5
+
+Sheets("Tesla").Copy
+Sheets("BROCARD").Copy
+Sheets("LISTE").Copy
+
+
+Do While mavarboucle1 <= 70
+   Sheets("LISTE").Activate
+      variableauxiliaire = Cells(mavarboucle1, 4)
+      If variableauxiliaire = "" Then
+         mavarboucle1 = mavarboucle1 + 1
+      Else
+         If Len(variableauxiliaire) = 3 Then
+            testartorbrocard = Mid(variableauxiliaire, 3, 1)
+            numerodechambre = CInt(Mid(variableauxiliaire, 1, 2))
+            nomdeloccupant = Cells(mavarboucle1, 2)
+            numerodebrigade = Cells(mavarboucle1, 3)
+            couleurbrigade = Cells(mavarboucle1, 3).Interior.Color
+         Else
+            If Len(variableauxiliaire) = 4 Then
+              testartorbrocard = Mid(variableauxiliaire, 4, 1)
+               numerodechambre = CInt(Mid(variableauxiliaire, 1, 3))
+               nomdeloccupant = Cells(mavarboucle1, 2)
+               numerodebrigade = Cells(mavarboucle1, 3)
+            Else
+               ActiveSheet.Cells(15, 15).UnMerge
+                  Cells(15, 15) = Cells(mavarboucle1, 2)
+                  Cells(15, 16) = Cells(mavarboucle1, 3)
+                  Cells(15, 16).Interior.Color = couleurbrigade
+              End If
+            couleurbrigade = Cells(mavarboucle1, 3).Interior.Color
+         End If
+            
+            
+            
+            If testartorbrocard = "T" Then
+      '
+      'Testard
+      'Q5 to Q16 , Q20 to Q31 , C32 to H32,Q33 to Q44, C47 to H47, AK9 to AK24, AK26 to AK37, AK39 to AK50,W53 to AH53,W38 to AH38
+      '
+      '
+      'Q5 to Q16
+      '
+      '
+      Sheets("Tesla").Activate
+      mavarboucle2 = 5
+      Do While mavarboucle2 <= 16
+         If Len(Cells(mavarboucle2, 17)) <= 3 Then
+            If Cells(mavarboucle2, 17) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 15).UnMerge
+               Cells(mavarboucle2, 15) = nomdeloccupant
+               Cells(mavarboucle2, 16) = numerodebrigade
+               Cells(mavarboucle2, 16).Interior.Color = couleurbrigade
+               mavarboucle2 = 17
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 17), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 15).UnMerge
+               Cells(mavarboucle2, 15) = nomdeloccupant
+               Cells(mavarboucle2, 16) = numerodebrigade
+               Cells(mavarboucle2, 16).Interior.Color = couleurbrigade
+               mavarboucle2 = 17
+            Else
+               If Mid(Cells(mavarboucle2, 17), Len(Cells(mavarboucle2, 17)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 18).UnMerge
+                  Cells(mavarboucle2, 18) = nomdeloccupant
+                  Cells(mavarboucle2, 19) = numerodebrigade
+                  Cells(mavarboucle2, 19).Interior.Color = couleurbrigade
+                  mavarboucle2 = 17
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'Q20 to Q31
+      '
+      '
+      mavarboucle2 = 20
+      Do While mavarboucle2 <= 31
+         If Len(Cells(mavarboucle2, 17)) <= 3 Then
+            If Cells(mavarboucle2, 17) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 15).UnMerge
+               Cells(mavarboucle2, 15) = nomdeloccupant
+               Cells(mavarboucle2, 16) = numerodebrigade
+               Cells(mavarboucle2, 16).Interior.Color = couleurbrigade
+               mavarboucle2 = 32
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 17), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 15).UnMerge
+               Cells(mavarboucle2, 15) = nomdeloccupant
+               Cells(mavarboucle2, 16) = numerodebrigade
+               Cells(mavarboucle2, 16).Interior.Color = couleurbrigade
+               mavarboucle2 = 32
+            Else
+               If Mid(Cells(mavarboucle2, 17), Len(Cells(mavarboucle2, 17)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 18).UnMerge
+                  Cells(mavarboucle2, 18) = nomdeloccupant
+                  Cells(mavarboucle2, 19) = numerodebrigade
+                  Cells(mavarboucle2, 19).Interior.Color = couleurbrigade
+                  mavarboucle2 = 32
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'Q33 to Q44
+      '
+      '
+      mavarboucle2 = 33
+      Do While mavarboucle2 <= 43
+         If Len(Cells(mavarboucle2, 17)) <= 3 Then
+            If Cells(mavarboucle2, 17) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 15).UnMerge
+               Cells(mavarboucle2, 15) = nomdeloccupant
+               Cells(mavarboucle2, 16) = numerodebrigade
+               Cells(mavarboucle2, 16).Interior.Color = couleurbrigade
+               mavarboucle2 = 45
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 17), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 15).UnMerge
+               Cells(mavarboucle2, 15) = nomdeloccupant
+               Cells(mavarboucle2, 16) = numerodebrigade
+               Cells(mavarboucle2, 16).Interior.Color = couleurbrigade
+               mavarboucle2 = 45
+            Else
+               If Mid(Cells(mavarboucle2, 17), Len(Cells(mavarboucle2, 17)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 18).UnMerge
+                  Cells(mavarboucle2, 18) = nomdeloccupant
+                  Cells(mavarboucle2, 19) = numerodebrigade
+                  Cells(mavarboucle2, 19).Interior.Color = couleurbrigade
+                  mavarboucle2 = 45
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      If Cells(mavarboucle2, 17) Then
+         ActiveSheet.Cells(mavarboucle2, 18).UnMerge
+                  Cells(mavarboucle2, 18) = nomdeloccupant
+                  Cells(mavarboucle2, 19) = numerodebrigade
+                  Cells(mavarboucle2, 19).Interior.Color = couleurbrigade
+      Else
+        mavarboucle2 = mavarboucle2
+      End If
+      '
+      'AK9 to AK24
+      '
+      mavarboucle2 = 9
+      Do While mavarboucle2 <= 24
+         If Len(Cells(mavarboucle2, 37)) <= 3 Then
+            If Cells(mavarboucle2, 37) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 35).UnMerge
+               Cells(mavarboucle2, 35) = nomdeloccupant
+               Cells(mavarboucle2, 36) = numerodebrigade
+               Cells(mavarboucle2, 36).Interior.Color = couleurbrigade
+               mavarboucle2 = 25
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 37), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 35).UnMerge
+               Cells(mavarboucle2, 35) = nomdeloccupant
+               Cells(mavarboucle2, 36) = numerodebrigade
+               Cells(mavarboucle2, 36).Interior.Color = couleurbrigade
+               mavarboucle2 = 25
+            Else
+               If Mid(Cells(mavarboucle2, 37), Len(Cells(mavarboucle2, 37)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 38).UnMerge
+                  Cells(mavarboucle2, 38) = nomdeloccupant
+                  Cells(mavarboucle2, 39) = numerodebrigade
+                  Cells(mavarboucle2, 39).Interior.Color = couleurbrigade
+                  mavarboucle2 = 25
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'AK26 to AK37
+      '
+      mavarboucle2 = 26
+      Do While mavarboucle2 <= 37
+         If Len(Cells(mavarboucle2, 37)) <= 3 Then
+            If Cells(mavarboucle2, 37) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 35).UnMerge
+               Cells(mavarboucle2, 35) = nomdeloccupant
+               Cells(mavarboucle2, 36) = numerodebrigade
+               Cells(mavarboucle2, 36).Interior.Color = couleurbrigade
+               mavarboucle2 = 38
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 37), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 35).UnMerge
+               Cells(mavarboucle2, 35) = nomdeloccupant
+               Cells(mavarboucle2, 36) = numerodebrigade
+               Cells(mavarboucle2, 36).Interior.Color = couleurbrigade
+               mavarboucle2 = 38
+            Else
+               If Mid(Cells(mavarboucle2, 37), Len(Cells(mavarboucle2, 37)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 38).UnMerge
+                  Cells(mavarboucle2, 38) = nomdeloccupant
+                  Cells(mavarboucle2, 39) = numerodebrigade
+                  Cells(mavarboucle2, 39).Interior.Color = couleurbrigade
+                  mavarboucle2 = 38
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'AK39 to AK50
+      '
+      mavarboucle2 = 39
+      Do While mavarboucle2 <= 49
+         If Len(Cells(mavarboucle2, 37)) <= 3 Then
+            If Cells(mavarboucle2, 37) = numerodechambre Then
+               Cells(mavarboucle2, 35) = nomdeloccupant
+               Cells(mavarboucle2, 36) = numerodebrigade
+               Cells(mavarboucle2, 36).Interior.Color = couleurbrigade
+               mavarboucle2 = 51
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 37), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 35).UnMerge
+               Cells(mavarboucle2, 35) = nomdeloccupant
+               Cells(mavarboucle2, 36) = numerodebrigade
+               Cells(mavarboucle2, 36).Interior.Color = couleurbrigade
+               mavarboucle2 = 51
+            Else
+               If Mid(Cells(mavarboucle2, 37), Len(Cells(mavarboucle2, 37)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 38).UnMerge
+                  Cells(mavarboucle2, 38) = nomdeloccupant
+                  Cells(mavarboucle2, 39) = numerodebrigade
+                  Cells(mavarboucle2, 39).Interior.Color = couleurbrigade
+                  mavarboucle2 = 51
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      If Cells(mavarboucle2, 37) Then
+         ActiveSheet.Cells(mavarboucle2, 38).UnMerge
+                  Cells(mavarboucle2, 38) = nomdeloccupant
+                  Cells(mavarboucle2, 39) = numerodebrigade
+                  Cells(mavarboucle2, 39).Interior.Color = couleurbrigade
+      Else
+        mavarboucle2 = mavarboucle2
+      End If
+      '
+      'C32 to H32
+      '
+      mavarboucle2 = 3
+      Do While mavarboucle2 <= 8
+         If Len(Cells(32, mavarboucle2)) <= 3 Then
+            If Cells(32, mavarboucle2) = numerodechambre Then
+               ActiveSheet.Cells(33, mavarboucle2).UnMerge
+               Cells(33, mavarboucle2) = nomdeloccupant
+               Cells(34, mavarboucle2) = numerodebrigade
+               Cells(34, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 9
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(32, mavarboucle2), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(30, mavarboucle2).UnMerge
+               Cells(30, mavarboucle2) = nomdeloccupant
+               Cells(31, mavarboucle2) = numerodebrigade
+               Cells(31, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 9
+            Else
+               If Mid(Cells(32, mavarboucle2), Len(Cells(32, mavarboucle2)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(33, mavarboucle2).UnMerge
+                  Cells(33, mavarboucle2) = nomdeloccupant
+                  Cells(34, mavarboucle2) = numerodebrigade
+                  Cells(34, mavarboucle2).Interior.Color = couleurbrigade
+                  mavarboucle2 = 9
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'C47 to H47
+      '
+      mavarboucle2 = 3
+      Do While mavarboucle2 <= 8
+         If Len(Cells(47, mavarboucle2)) <= 3 Then
+            If Cells(47, mavarboucle2) = numerodechambre Then
+               ActiveSheet.Cells(48, mavarboucle2).UnMerge
+               Cells(48, mavarboucle2) = nomdeloccupant
+               Cells(49, mavarboucle2) = numerodebrigade
+               Cells(49, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 9
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(47, mavarboucle2), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(45, mavarboucle2).UnMerge
+               Cells(45, mavarboucle2) = nomdeloccupant
+               Cells(46, mavarboucle2) = numerodebrigade
+               Cells(46, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 9
+            Else
+               If Mid(Cells(47, mavarboucle2), Len(Cells(47, mavarboucle2)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(48, mavarboucle2).UnMerge
+                  Cells(48, mavarboucle2) = nomdeloccupant
+                  Cells(49, mavarboucle2) = numerodebrigade
+                  Cells(49, mavarboucle2).Interior.Color = couleurbrigade
+                  mavarboucle2 = 9
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'W53 to AH53
+      '
+      mavarboucle2 = 23
+      Do While mavarboucle2 <= 34
+         If Len(Cells(53, mavarboucle2)) <= 3 Then
+            If Cells(53, mavarboucle2) = numerodechambre Then
+               ActiveSheet.Cells(54, mavarboucle2).UnMerge
+               Cells(54, mavarboucle2) = nomdeloccupant
+               Cells(55, mavarboucle2) = numerodebrigade
+               Cells(55, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 35
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(53, mavarboucle2), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(51, mavarboucle2).UnMerge
+               Cells(51, mavarboucle2) = nomdeloccupant
+               Cells(52, mavarboucle2) = numerodebrigade
+               Cells(52, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 35
+            Else
+               If Mid(Cells(53, mavarboucle2), Len(Cells(53, mavarboucle2)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(54, mavarboucle2).UnMerge
+                  Cells(54, mavarboucle2) = nomdeloccupant
+                  Cells(55, mavarboucle2) = numerodebrigade
+                  Cells(55, mavarboucle2).Interior.Color = couleurbrigade
+                  mavarboucle2 = 35
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'W38 to AH38
+      '
+      mavarboucle2 = 23
+      Do While mavarboucle2 <= 34
+         If Len(Cells(38, mavarboucle2)) <= 3 Then
+            If Cells(38, mavarboucle2) = numerodechambre Then
+               ActiveSheet.Cells(39, mavarboucle2).UnMerge
+               Cells(39, mavarboucle2) = nomdeloccupant
+               Cells(40, mavarboucle2) = numerodebrigade
+               Cells(40, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 35
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(38, mavarboucle2), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(36, mavarboucle2).UnMerge
+               Cells(36, mavarboucle2) = nomdeloccupant
+               Cells(37, mavarboucle2) = numerodebrigade
+               Cells(37, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 35
+            Else
+               If Mid(Cells(38, mavarboucle2), Len(Cells(38, mavarboucle2)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(39, mavarboucle2).UnMerge
+                  Cells(39, mavarboucle2) = nomdeloccupant
+                  Cells(40, mavarboucle2) = numerodebrigade
+                  Cells(40, mavarboucle2).Interior.Color = Cells(mavarboucle1, 3).Interior.Color
+                  mavarboucle2 = 35
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      mavarboucle1 = mavarboucle1 + 1
+    Else
+      If testartorbrocard = "B" Then
+       MsgBox nomdeloccupant & " " & variableauxiliaire
+      'BROCARD
+      'J2 to J15, J17 to J28,J30 to J41, D8 to D21, D23 to D34, D36 to D47, G50 to R50,M44 to X44
+      '
+      'J2 to J15
+      '
+      Sheets("BROCARD").Activate
+      mavarboucle2 = 2
+      Do While mavarboucle2 <= 15
+         If Len(Cells(mavarboucle2, 10)) <= 3 Then
+            If Cells(mavarboucle2, 10) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 8).UnMerge
+               Cells(mavarboucle2, 8) = nomdeloccupant
+               Cells(mavarboucle2, 9) = numerodebrigade
+               Cells(mavarboucle2, 9).Interior.Color = couleurbrigade
+               mavarboucle2 = 16
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 10), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 8).UnMerge
+               Cells(mavarboucle2, 8) = nomdeloccupant
+               Cells(mavarboucle2, 9) = numerodebrigade
+               Cells(mavarboucle2, 9).Interior.Color = couleurbrigade
+               mavarboucle2 = 16
+            Else
+               If Mid(Cells(mavarboucle2, 10), Len(Cells(mavarboucle2, 10)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 11).UnMerge
+                  Cells(mavarboucle2, 11) = nomdeloccupant
+                  Cells(mavarboucle2, 12) = numerodebrigade
+                  Cells(mavarboucle2, 12).Interior.Color = couleurbrigade
+                  mavarboucle2 = 17
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'J17 to J28
+      '
+      mavarboucle2 = 17
+      Do While mavarboucle2 <= 28
+         If Len(Cells(mavarboucle2, 10)) <= 3 Then
+            If Cells(mavarboucle2, 10) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 8).UnMerge
+               Cells(mavarboucle2, 8) = nomdeloccupant
+               Cells(mavarboucle2, 9) = numerodebrigade
+               Cells(mavarboucle2, 9).Interior.Color = couleurbrigade
+               mavarboucle2 = 29
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 10), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 8).UnMerge
+               Cells(mavarboucle2, 8) = nomdeloccupant
+               Cells(mavarboucle2, 9) = numerodebrigade
+               Cells(mavarboucle2, 9).Interior.Color = couleurbrigade
+               mavarboucle2 = 29
+            Else
+               If Mid(Cells(mavarboucle2, 10), Len(Cells(mavarboucle2, 10)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 11).UnMerge
+                  Cells(mavarboucle2, 11) = nomdeloccupant
+                  Cells(mavarboucle2, 12) = numerodebrigade
+                  Cells(mavarboucle2, 12).Interior.Color = couleurbrigade
+                  mavarboucle2 = 29
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'J30 to J41
+      '
+      mavarboucle2 = 30
+      Do While mavarboucle2 <= 41
+         If Len(Cells(mavarboucle2, 10)) <= 3 Then
+            If Cells(mavarboucle2, 10) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 8).UnMerge
+               Cells(mavarboucle2, 8) = nomdeloccupant
+               Cells(mavarboucle2, 9) = numerodebrigade
+               Cells(mavarboucle2, 9).Interior.Color = couleurbrigade
+               mavarboucle2 = 42
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 10), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 8).UnMerge
+               Cells(mavarboucle2, 8) = nomdeloccupant
+               Cells(mavarboucle2, 9) = numerodebrigade
+               Cells(mavarboucle2, 9).Interior.Color = Cells(mavarboucle1, 3).Interior.Color
+               mavarboucle2 = 42
+            Else
+               If Mid(Cells(mavarboucle2, 10), Len(Cells(mavarboucle2, 10)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 11).UnMerge
+                  Cells(mavarboucle2, 11) = nomdeloccupant
+                  Cells(mavarboucle2, 12) = numerodebrigade
+                  Cells(mavarboucle2, 12).Interior.Color = couleurbrigade
+                  mavarboucle2 = 42
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'D8 to D21
+      '
+      mavarboucle2 = 10
+      Do While mavarboucle2 <= 21
+         If Len(Cells(mavarboucle2, 4)) <= 3 Then
+            If Cells(mavarboucle2, 4) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 2).UnMerge
+               Cells(mavarboucle2, 2) = nomdeloccupant
+               Cells(mavarboucle2, 3) = numerodebrigade
+               Cells(mavarboucle2, 3).Interior.Color = couleurbrigade
+               mavarboucle2 = 22
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 4), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 2).UnMerge
+               Cells(mavarboucle2, 2) = nomdeloccupant
+               Cells(mavarboucle2, 3) = numerodebrigade
+               Cells(mavarboucle2, 3).Interior.Color = couleurbrigade
+               mavarboucle2 = 22
+            Else
+               If Mid(Cells(mavarboucle2, 4), Len(Cells(mavarboucle2, 4)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 5).UnMerge
+                  Cells(mavarboucle2, 5) = nomdeloccupant
+                  Cells(mavarboucle2, 6) = numerodebrigade
+                  Cells(mavarboucle2, 6).Interior.Color = couleurbrigade
+                  mavarboucle2 = 22
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      If Cells(mavarboucle2, 4) = numerodechambre Then
+         ActiveSheet.Cells(mavarboucle2, 5).UnMerge
+                  Cells(mavarboucle2, 5) = nomdeloccupant
+                  Cells(mavarboucle2, 6) = numerodebrigade
+                  Cells(mavarboucle2, 6).Interior.Color = couleurbrigade
+      Else
+         mavarboucle2 = mavarboucle2
+      End If
+      '
+      'D23 to D34, D36 to D47
+      '
+      mavarboucle2 = 23
+      Do While mavarboucle2 <= 34
+         If Len(Cells(mavarboucle2, 4)) <= 3 Then
+            If Cells(mavarboucle2, 4) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 2).UnMerge
+               Cells(mavarboucle2, 2) = nomdeloccupant
+               Cells(mavarboucle2, 3) = numerodebrigade
+               Cells(mavarboucle2, 3).Interior.Color = couleurbrigade
+               mavarboucle2 = 35
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 4), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 2).UnMerge
+               Cells(mavarboucle2, 2) = nomdeloccupant
+               Cells(mavarboucle2, 3) = numerodebrigade
+               Cells(mavarboucle2, 3).Interior.Color = couleurbrigade
+               mavarboucle2 = 35
+            Else
+               If Mid(Cells(mavarboucle2, 4), Len(Cells(mavarboucle2, 4)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 5).UnMerge
+                  Cells(mavarboucle2, 5) = nomdeloccupant
+                  Cells(mavarboucle2, 6) = numerodebrigade
+                  Cells(mavarboucle2, 6).Interior.Color = couleurbrigade
+                  mavarboucle2 = 35
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'D36 to D47
+      '
+      mavarboucle2 = 36
+      Do While mavarboucle2 <= 47
+         If Len(Cells(mavarboucle2, 4)) <= 3 Then
+            If Cells(mavarboucle2, 4) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 2).UnMerge
+               Cells(mavarboucle2, 2) = nomdeloccupant
+               Cells(mavarboucle2, 3) = numerodebrigade
+               Cells(mavarboucle2, 3).Interior.Color = couleurbrigade
+               mavarboucle2 = 47
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(mavarboucle2, 4), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(mavarboucle2, 2).UnMerge
+               Cells(mavarboucle2, 2) = nomdeloccupant
+               Cells(mavarboucle2, 3) = numerodebrigade
+               Cells(mavarboucle2, 3).Interior.Color = couleurbrigade
+               mavarboucle2 = 47
+            Else
+               If Mid(Cells(mavarboucle2, 4), Len(Cells(mavarboucle2, 4)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(mavarboucle2, 5).UnMerge
+                  Cells(mavarboucle2, 5) = nomdeloccupant
+                  Cells(mavarboucle2, 6) = numerodebrigade
+                  Cells(mavarboucle2, 6).Interior.Color = couleurbrigade
+                  mavarboucle2 = 47
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'G50 to R50
+      '
+      mavarboucle2 = 7
+      Do While mavarboucle2 <= 18
+         If Len(Cells(50, mavarboucle2)) <= 3 Then
+            If Cells(50, mavarboucle2) = numerodechambre Then
+               ActiveSheet.Cells(51, mavarboucle2).UnMerge
+               Cells(51, mavarboucle2) = nomdeloccupant
+               Cells(52, mavarboucle2) = numerodebrigade
+               Cells(52, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 19
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(50, mavarboucle2), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(48, mavarboucle2).UnMerge
+               Cells(48, mavarboucle2) = nomdeloccupant
+               Cells(49, mavarboucle2) = numerodebrigade
+               Cells(49, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 19
+            Else
+               If Mid(Cells(50, mavarboucle2), Len(Cells(50, mavarboucle2)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(51, mavarboucle2).UnMerge
+                  Cells(51, mavarboucle2) = nomdeloccupant
+                  Cells(52, mavarboucle2) = numerodebrigade
+                  Cells(52, mavarboucle2).Interior.Color = couleurbrigade
+                  mavarboucle2 = 19
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      '
+      'M44 to X44
+      '
+      mavarboucle2 = 14
+      Do While mavarboucle2 <= 24
+         If Len(Cells(44, mavarboucle2)) <= 3 Then
+            If Cells(44, mavarboucle2) = numerodechambre Then
+               ActiveSheet.Cells(45, mavarboucle2).UnMerge
+               Cells(45, mavarboucle2) = nomdeloccupant
+               Cells(46, mavarboucle2) = numerodebrigade
+               Cells(46, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 25
+            Else
+               mavarboucle2 = mavarboucle2 + 1
+            End If
+         Else
+            If Mid(Cells(44, mavarboucle2), 1, 3) = numerodechambre Then
+               ActiveSheet.Cells(42, mavarboucle2).UnMerge
+               Cells(42, mavarboucle2) = nomdeloccupant
+               Cells(43, mavarboucle2) = numerodebrigade
+               Cells(43, mavarboucle2).Interior.Color = couleurbrigade
+               mavarboucle2 = 19
+            Else
+               If Mid(Cells(44, mavarboucle2), Len(Cells(44, mavarboucle2)) - 2, 3) = numerodechambre Then
+                  ActiveSheet.Cells(45, mavarboucle2).UnMerge
+                  Cells(45, mavarboucle2) = nomdeloccupant
+                  Cells(46, mavarboucle2) = numerodebrigade
+                  Cells(46, mavarboucle2).Interior.Color = couleurbrigade
+                  mavarboucle2 = 19
+               Else
+                  mavarboucle2 = mavarboucle2 + 1
+               End If
+            End If
+         End If
+      Loop
+      mavarboucle1 = mavarboucle1 + 1
+      Else
+        mavarboucle2 = mavarboucle2
+      End If
+   End If
+  
+   End If
+
+Loop
+
+End Sub
